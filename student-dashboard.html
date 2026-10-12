@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - PlacementHub</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<!-- Dashboard Navbar -->
+<header class="dashboard-navbar">
+    <div class="logo">
+        🎓 PlacementHub
+    </div>
+    <div class="nav-actions">
+        <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+        
+        <!-- Notifications Bell -->
+        <div class="notif-wrapper">
+            <button class="notif-bell-btn" onclick="toggleNotifDropdown()" title="Notifications">
+                🔔
+                <span class="notif-badge" id="navbarNotifBadge" style="display:none;">0</span>
+            </button>
+            <div class="notif-dropdown" id="navbarNotifDropdown">
+                <div class="notif-header">
+                    <span>Notifications</span>
+                    <button onclick="markAllNotificationsRead()" class="btn btn-sm btn-outline" style="font-size:11px; padding:2px 8px;">Mark all read</button>
+                </div>
+                <div id="navbarNotifList">
+                    <div style="padding:16px; text-align:center; color:var(--text-muted);">Loading alerts...</div>
+                </div>
+            </div>
+        </div>
+
+        <span id="studentName" style="font-weight: 600; font-size: 14px;">Student</span>
+        <button onclick="logout()" class="logout-button">Logout</button>
+    </div>
+</header>
+
+<div class="dashboard">
+    <!-- Sidebar Navigation Tabs -->
+    <aside class="sidebar">
+        <div class="sidebar-title">Student Portal</div>
+        <button class="tab-link active" onclick="switchTab('overviewTab', this)">
+            <span>📊</span> Readiness & Overview
+        </button>
+        <button class="tab-link" onclick="switchTab('myApplicationsTab', this)" id="sidebarMyAppsBtn">
+            <span>📄</span> My Applications
+            <span class="badge badge-purple" id="sidebarAppBadge" style="display:none; font-size:10px; margin-left:auto;">0</span>
+        </button>
+        <button class="tab-link" onclick="switchTab('profileTab', this)">
+            <span>👤</span> Profile & Eligibility
+        </button>
+        <button class="tab-link" onclick="switchTab('visitingTab', this)">
+            <span>🏢</span> Visiting Companies
+            <span class="badge badge-primary" id="visitingDriveCountBadge" style="display:none; font-size:10px;">0</span>
+        </button>
+        <button class="tab-link" onclick="switchTab('recommendationsTab', this)">
+            <span>🎯</span> Job Recommendations
+        </button>
+        <button class="tab-link" onclick="switchTab('skillGapTab', this)">
+            <span>🧠</span> Skill-Gap Analyzer
+        </button>
+        <button class="tab-link" onclick="switchTab('resumeTab', this)">
+            <span>📝</span> Resume Analyzer
+        </button>
+        <button class="tab-link" onclick="switchTab('prepTab', this)">
+            <span>⚡</span> Preparation Zone
+        </button>
+        <button class="tab-link" onclick="switchTab('timelineTab', this)">
+            <span>📅</span> Drive Calendar & Timeline
+        </button>
+        <button class="tab-link" onclick="switchTab('notificationsTab', this)">
+            <span>🔔</span> Notifications Center
+            <span class="badge badge-danger" id="sidebarNotifBadge" style="display:none; font-size:10px; margin-left:auto;">0</span>
+        </button>
+        <button class="tab-link" onclick="switchTab('analyticsTab', this)">
+            <span>📈</span> Placement Analytics
+        </button>
+        <button class="tab-link" onclick="switchTab('alumniTab', this)">
+            <span>👥</span> Alumni & Mentorship
+        </button>
+        <button class="tab-link" onclick="switchTab('offersTab', this)">
+            <span>⚖️</span> Offer Comparison
+        </button>
+
+        <div class="sidebar-title" style="margin-top: 14px;">Quick Navigation</div>
+        <a href="jobs.html">
+            <span>💼</span> Find All Jobs
+        </a>
+        <a href="profile.html">
+            <span>👤</span> My Profile
+        </a>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="dashboard-content">
+
+        <!-- ==========================================
+             TAB 1: READINESS & OVERVIEW
+             ========================================== -->
+        <section id="overviewTab" class="dashboard-tab-panel active">
+            <div class="dashboard-header">
+                <div>
+                    <h1>Placement Readiness Dashboard</h1>
+                    <p>Track your verified qualifications, preparation milestones, and active applications.</p>
+                </div>
+                <a href="jobs.html" class="btn btn-primary">Browse Active Drives</a>
+            </div>
+
+            <!-- Feature 6: Placement Readiness Card -->
+            <div class="readiness-card">
+                <div class="readiness-header">
+                    <div class="readiness-gauge-box">
+                        <div class="readiness-big-score" id="readinessScoreVal">--</div>
+                        <div>
+                            <div style="font-size: 13px; font-weight: 600; text-transform: uppercase; color: var(--text-muted);">Overall Readiness</div>
+                            <div class="readiness-tier-pill" id="readinessTierPill">Calculating...</div>
+                        </div>
+                    </div>
+                    <div style="font-size: 13px; color: var(--text-muted); max-width: 320px; text-align: right;">
+                        Scored objectively against profile completeness, verified skill set, aptitude accuracy, and mock interview performance.
+                    </div>
+                </div>
+
+                <!-- Measurable Breakdown Bars -->
+                <div class="readiness-bars-grid" id="readinessBarsGrid">
+                    <!-- Loaded dynamically -->
+                    <div class="skeleton" style="height: 60px;"></div>
+                    <div class="skeleton" style="height: 60px;"></div>
+                    <div class="skeleton" style="height: 60px;"></div>
+                    <div class="skeleton" style="height: 60px;"></div>
+                </div>
+
+                <!-- Actionable Checklist -->
+                <div class="checklist-container">
+                    <strong style="font-size: 13px;">Next Steps to Maximize Readiness:</strong>
+                    <div class="checklist-grid" id="readinessChecklist">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Standard Top Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <h3>Campus Drives</h3>
+                        <span class="stat-icon">💼</span>
+                    </div>
+                    <strong id="jobCount">0</strong>
+                    <span class="stat-subtitle">Currently active drives</span>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <h3>My Applications</h3>
+                        <span class="stat-icon">📄</span>
+                    </div>
+                    <strong id="applicationCount">0</strong>
+                    <span class="stat-subtitle">Submitted applications</span>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <h3>Shortlisted / Selected</h3>
+                        <span class="stat-icon">🎯</span>
+                    </div>
+                    <strong id="shortlistedCount">0</strong>
+                    <span class="stat-subtitle">Advanced stages</span>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 UPCOMING VISITING COMPANIES & CAMPUS RECRUITMENT DRIVES
+                 ========================================== -->
+            <div style="margin-top: 32px; margin-bottom: 24px;">
+                <div class="dashboard-header" style="margin-bottom: 14px;">
+                    <div>
+                        <h2>🏢 Upcoming Visiting Companies (Campus Drives)</h2>
+                        <p style="font-size: 13px; color: var(--text-muted);">Companies officially visiting campus for placement drives. Review visit dates, check eligibility, and apply directly.</p>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="loadVisitingCompanies()" class="btn btn-sm btn-secondary">🔄 Refresh</button>
+                        <button onclick="switchTab('visitingTab', document.querySelector('.sidebar button[onclick*=\'visitingTab\']'))" class="btn btn-sm btn-primary">View Full Schedule →</button>
+                    </div>
+                </div>
+                <div id="overviewVisitingCompaniesContainer" class="job-grid">
+                    <div class="skeleton" style="height: 250px;"></div>
+                    <div class="skeleton" style="height: 250px;"></div>
+                </div>
+            </div>
+
+            <!-- My Applications Table -->
+            <div style="margin-top: 30px;">
+                <div class="dashboard-header" style="margin-bottom: 14px;">
+                    <div>
+                        <h2>My Applications & Live Stages</h2>
+                        <small style="color: var(--text-muted);">Real-time tracking of submitted applications, recruitment stages, and candidate selection status</small>
+                    </div>
+                    <button onclick="switchTab('myApplicationsTab', document.getElementById('sidebarMyAppsBtn'))" class="btn btn-sm btn-primary">
+                        View Full Applications Portal →
+                    </button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Company</th>
+                                <th>Job Role</th>
+                                <th>Application Date</th>
+                                <th>Package & Location</th>
+                                <th>Current Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentApplicationsTable">
+                            <tr><td colspan="6" style="text-align:center; padding:30px;">Loading applications...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             TAB 2: MY APPLICATIONS & SELECTION STATUS (FEATURE 3)
+             ========================================== -->
+        <section id="myApplicationsTab" class="dashboard-tab-panel" style="display:none;">
+            <div class="dashboard-header">
+                <div>
+                    <h1>My Applications & Selection Status</h1>
+                    <p>Track your submitted applications, recruitment stages, interview invitations, and verified selection offers in real-time.</p>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button onclick="loadStudentApplications()" class="btn btn-secondary">🔄 Refresh</button>
+                    <a href="jobs.html" class="btn btn-primary">+ Explore Live Drives</a>
+                </div>
+            </div>
+
+            <!-- Application Stats Summary -->
+            <div class="app-kpi-grid">
+                <div class="app-kpi-card">
+                    <div>
+                        <small style="color:var(--text-muted); font-size:11px; text-transform:uppercase; font-weight:700;">Total Submitted</small>
+                        <h3 id="appKpiTotal" style="font-size:22px; margin-top:2px; color:var(--text-primary);">0</h3>
+                    </div>
+                    <span style="font-size:24px;">📄</span>
+                </div>
+                <div class="app-kpi-card">
+                    <div>
+                        <small style="color:var(--text-muted); font-size:11px; text-transform:uppercase; font-weight:700;">Under Review</small>
+                        <h3 id="appKpiReview" style="font-size:22px; margin-top:2px; color:var(--warning);">0</h3>
+                    </div>
+                    <span style="font-size:24px;">🔍</span>
+                </div>
+                <div class="app-kpi-card">
+                    <div>
+                        <small style="color:var(--text-muted); font-size:11px; text-transform:uppercase; font-weight:700;">Shortlisted / Interviews</small>
+                        <h3 id="appKpiShortlisted" style="font-size:22px; margin-top:2px; color:var(--primary);">0</h3>
+                    </div>
+                    <span style="font-size:24px;">🎯</span>
+                </div>
+                <div class="app-kpi-card">
+                    <div>
+                        <small style="color:var(--text-muted); font-size:11px; text-transform:uppercase; font-weight:700;">Selected / Offers</small>
+                        <h3 id="appKpiSelected" style="font-size:22px; margin-top:2px; color:var(--success);">0</h3>
+                    </div>
+                    <span style="font-size:24px;">🏆</span>
+                </div>
+            </div>
+
+            <!-- Search and Filter Bar -->
+            <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:16px 20px; margin-bottom:20px;">
+                <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:14px;">
+                    <div style="flex:1; min-width:240px; position:relative;">
+                        <input type="text" id="myAppsSearchInput" oninput="filterMyApplications()" placeholder="Search by company name, job role, or location..." style="margin-bottom:0; padding-left:36px;">
+                        <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:14px;">🔍</span>
+                    </div>
+                    <button onclick="document.getElementById('myAppsSearchInput').value=''; filterMyApplications();" class="btn btn-sm btn-outline">Clear Search</button>
+                </div>
+
+                <!-- Status Filter Pills -->
+                <div class="app-filter-pills" id="appFilterPillsContainer">
+                    <button class="app-filter-pill active" onclick="setAppFilterStatus('all', this)">All Applications (<span id="pillCountAll">0</span>)</button>
+                    <button class="app-filter-pill" onclick="setAppFilterStatus('Applied', this)">📝 Applied (<span id="pillCountApplied">0</span>)</button>
+                    <button class="app-filter-pill" onclick="setAppFilterStatus('Under Review', this)">🔍 Under Review (<span id="pillCountUnderReview">0</span>)</button>
+                    <button class="app-filter-pill" onclick="setAppFilterStatus('Shortlisted', this)">🎯 Shortlisted (<span id="pillCountShortlisted">0</span>)</button>
+                    <button class="app-filter-pill" onclick="setAppFilterStatus('Interview Scheduled', this)">📅 Interview Scheduled (<span id="pillCountInterview">0</span>)</button>
+                    <button class="app-filter-pill" onclick="setAppFilterStatus('Selected', this)">🎉 Selected (<span id="pillCountSelected">0</span>)</button>
+                    <button class="app-filter-pill" onclick="setAppFilterStatus('Not Selected', this)">✕ Not Selected (<span id="pillCountNotSelected">0</span>)</button>
+                    <button class="app-filter-pill" onclick="setAppFilterStatus('Offer Accepted', this)">✅ Offer Accepted (<span id="pillCountOfferAccepted">0</span>)</button>
+                    <button class="app-filter-pill" onclick="setAppFilterStatus('Offer Declined', this)">⛔ Offer Declined (<span id="pillCountOfferDeclined">0</span>)</button>
+                </div>
+            </div>
+
+            <!-- Full Applications Table -->
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Company</th>
+                            <th>Job Role</th>
+                            <th>Application Date</th>
+                            <th>Package & Location</th>
+                            <th>Current Status</th>
+                            <th>Stage Notes</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fullMyApplicationsTable">
+                        <tr><td colspan="7" style="text-align:center; padding:30px;">Loading applications...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             TAB: STUDENT PROFILE, RESUME & ELIGIBILITY
+             ========================================== -->
+        <section id="profileTab" class="dashboard-tab-panel" style="display:none;">
+            <div class="dashboard-header">
+                <div>
+                    <h1>Candidate Profile, Resume & Drive Eligibility</h1>
+                    <p>Comprehensive overview of your academic records, technical competencies, projects, resume status, and eligibility across all campus drives.</p>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="loadStudentProfileAndEligibility()" class="btn btn-secondary">🔄 Refresh</button>
+                    <a href="profile.html" class="btn btn-primary">✏️ Edit Full Profile</a>
+                </div>
+            </div>
+
+            <!-- Academic KPI Ribbon -->
+            <div class="profile-academic-ribbon">
+                <div class="profile-academic-box">
+                    <small>Cumulative CGPA</small>
+                    <strong id="profTabCgpa" style="color:var(--primary);">0.00</strong>
+                </div>
+                <div class="profile-academic-box">
+                    <small>Active Backlogs</small>
+                    <strong id="profTabBacklogs" style="color:var(--success);">0</strong>
+                </div>
+                <div class="profile-academic-box">
+                    <small>Engineering Discipline</small>
+                    <strong id="profTabBranch" style="font-size:15px;">Engineering</strong>
+                </div>
+                <div class="profile-academic-box">
+                    <small>Graduation Batch</small>
+                    <strong id="profTabBatch">Batch 2026</strong>
+                </div>
+            </div>
+
+            <!-- Skills & Resume Cards -->
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; margin-bottom: 24px;">
+                <!-- Skills Card -->
+                <div class="readiness-card" style="margin-bottom:0;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <h3>Technical Skills & Competencies</h3>
+                        <span class="badge badge-primary">Verified</span>
+                    </div>
+                    <div id="profTabSkillsList" class="skill-chips-row" style="margin-bottom:12px;">
+                        <span class="skill-chip">Loading skills...</span>
+                    </div>
+                    <p style="font-size:12px; color:var(--text-muted); margin:0;">
+                        These skills are evaluated directly by the Intelligent Recommendation Engine and Skill-Gap Analyzer.
+                    </p>
+                </div>
+
+                <!-- Resume & ATS Card -->
+                <div class="readiness-card" style="margin-bottom:0;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <h3>Candidate Resume & ATS Score</h3>
+                        <span class="badge badge-success" id="profTabResumeStatus">Active</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap;">
+                        <input type="file" id="profTabFileInput" accept=".pdf,.doc,.docx,.txt" style="display:none;" onchange="handleStudentResumeUpload(event)">
+                        <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('profTabFileInput').click()">
+                            📁 Upload / Replace Resume
+                        </button>
+                        <span id="profTabResumeFilename" style="font-size:13px; font-weight:600; color:var(--text-secondary);">Rahul_Sharma_Resume.pdf</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px;">
+                        <span>ATS Resume Completeness:</span>
+                        <strong id="profTabAtsScore">85% (Strong)</strong>
+                    </div>
+                    <div class="progress-track" style="height:8px;">
+                        <div class="progress-fill" id="profTabAtsFill" style="width:85%; background:var(--success);"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Projects Card -->
+            <div class="readiness-card" style="margin-bottom: 24px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div>
+                        <h3>Key Academic & Personal Projects</h3>
+                        <p style="font-size:12px; color:var(--text-muted); margin:0;">Showcase projects reviewed by corporate recruiters for technical interviews.</p>
+                    </div>
+                </div>
+                <div id="profTabProjectsList" style="display:flex; flex-direction:column; gap:12px;">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+
+            <!-- Company Eligibility Matrix -->
+            <div class="readiness-card">
+                <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+                    <div>
+                        <h3>Company-Wise Eligibility Matrix</h3>
+                        <p style="font-size:13px; color:var(--text-muted); margin:0;">Transparent evaluation of your qualifications against every visiting recruiter's criteria.</p>
+                    </div>
+                    <span class="badge badge-primary" id="profTabEligibleCount">Checking drives...</span>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Visiting Recruiter</th>
+                                <th>Role & Compensation</th>
+                                <th>CGPA Cutoff</th>
+                                <th>Branches Allowed</th>
+                                <th>Max Backlogs</th>
+                                <th>Eligibility Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="companyEligibilityTableBody">
+                            <tr><td colspan="7" style="text-align:center;">Evaluating company cutoffs...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             TAB: VISITING COMPANIES & CAMPUS DRIVES SCHEDULE
+             ========================================== -->
+        <section id="visitingTab" class="dashboard-tab-panel" style="display:none;">
+            <div class="dashboard-header">
+                <div>
+                    <h1>🏢 Visiting Companies & Campus Recruitment Schedule</h1>
+                    <p>Official schedule announced by the Placement Cell. Check upcoming campus visit dates, eligibility cutoffs, required skills, and apply directly.</p>
+                </div>
+                <button onclick="loadVisitingCompanies()" class="btn btn-secondary">🔄 Refresh Schedule</button>
+            </div>
+
+            <!-- Filters -->
+            <div style="display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap;">
+                <input type="text" id="visitingSearchInput" oninput="filterVisitingCompanies()" placeholder="Search visiting company, role, skills, or venue..." style="flex: 1; min-width: 280px; margin-bottom:0;">
+                <select id="visitingEligibilityFilter" onchange="filterVisitingCompanies()" style="width: auto; margin-bottom:0;">
+                    <option value="all">All Visiting Drives</option>
+                    <option value="eligible">Only Drives I Qualify For</option>
+                    <option value="not_applied">Drives Not Applied Yet</option>
+                    <option value="applied">Already Applied</option>
+                </select>
+            </div>
+
+            <div id="visitingCompaniesFullContainer" class="job-grid">
+                <div class="skeleton" style="height: 250px;"></div>
+                <div class="skeleton" style="height: 250px;"></div>
+                <div class="skeleton" style="height: 250px;"></div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             TAB 2: INTELLIGENT JOB RECOMMENDATIONS (FEATURE 1)
+             ========================================== -->
+        <section id="recommendationsTab" class="dashboard-tab-panel" style="display:none;">
+            <div class="dashboard-header">
+                <div>
+                    <h1>Intelligent Job Recommendations</h1>
+                    <p>Explainable match evaluation based on your skills, branch, CGPA margin, and career interests. No blackbox percentages.</p>
+                </div>
+                <button onclick="loadRecommendations()" class="btn btn-secondary">🔄 Refresh Matches</button>
+            </div>
+
+            <div id="recommendationsContainer" class="job-grid">
+                <!-- Dynamically populated -->
+                <div class="skeleton" style="height: 250px;"></div>
+                <div class="skeleton" style="height: 250px;"></div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             TAB 3: SKILL-GAP ANALYZER (FEATURE 2)
+             ========================================== -->
+        <section id="skillGapTab" class="dashboard-tab-panel" style="display:none;">
+            <div class="dashboard-header">
+                <div>
+                    <h1>Skill-Gap Analyzer</h1>
+                    <p>Compare your engineering profile against job requirements to uncover missing skills, learning roadmaps, and practice prompts.</p>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <select id="skillGapTargetSelect" onchange="runSkillGapAnalysis()" style="width: auto; margin-bottom:0;">
+                        <option value="">Select Target Campus Drive...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="skillGapResults">
+                <div class="empty-state">
+                    <div class="empty-state-icon">🧠</div>
+                    <h3>Analyze Your Skill Readiness</h3>
+                    <p>Select a campus drive or target role above to evaluate skill coverage and get free curated learning roadmaps.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             TAB 4: RESUME ANALYZER (FEATURE 3)
+             ========================================== -->
+        <section id="resumeTab" class="dashboard-tab-panel" style="display:none;">
+            <div class="dashboard-header">
+                <div>
+                    <h1>Resume Analysis & ATS Alignment</h1>
+                    <p>Evaluate resume completeness, action verbs, quantifiable achievements, and keyword density.</p>
+                </div>
+            </div>
+
+            <!-- Disclaimer Notice -->
+            <div class="disclaimer-banner">
+                <span style="font-size: 20px;">⚠️</span>
+                <div>
+                    <strong>ESTIMATE NOTICE:</strong> This module provides automated heuristic estimates and ATS keyword indicators designed solely for placement preparation and resume improvement. Results are algorithmic estimates, not guarantees of interview shortlisting or hiring.
+                </div>
+            </div>
+
+            <div class="resume-analyzer-box">
+                <div style="margin-bottom: 16px;">
+                    <label for="resumeInputText">Paste your Resume Text / Markdown:</label>
+                    <textarea id="resumeInputText" rows="9" placeholder="Paste your complete resume text here (Summary, Education, Technical Skills, Projects, Work Experience, Certifications)..."></textarea>
+                </div>
+                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    <button onclick="runResumeAnalysis()" class="btn btn-primary" id="analyzeResumeBtn">Analyze Resume</button>
+                    <button onclick="saveResumeText()" class="btn btn-secondary">Save to Profile</button>
+                    <select id="resumeJobTarget" style="width: auto; margin-bottom: 0;">
+                        <option value="">Align with General Tech Standards</option>
+                    </select>
+                </div>
+
+                <div id="resumeAnalysisOutput" style="margin-top: 24px;"></div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             TAB 5: PREPARATION ZONE (FEATURE 4)
+             ========================================== -->
+        <section id="prepTab" class="dashboard-tab-panel" style="display:none;">
+            <div class="dashboard-header">
+                <div>
+                    <h1>Placement Preparation Zone</h1>
+                    <p>Master aptitude tests, practice coding challenges in our sandbox, simulate mock interviews, and view company guides.</p>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; flex-wrap: wrap;">
+                <button class="btn btn-sm btn-primary prep-subtab-btn" onclick="switchPrepSubTab('aptitudeSubTab', this)">Aptitude Practice</button>
+                <button class="btn btn-sm btn-secondary prep-subtab-btn" onclick="switchPrepSubTab('codingSubTab', this)">Coding Challenges</button>
+                <button class="btn btn-sm btn-secondary prep-subtab-btn" onclick="switchPrepSubTab('mockSubTab', this)">Mock Interview Simulator</button>
+                <button class="btn btn-sm btn-secondary prep-subtab-btn" onclick="switchPrepSubTab('guidesSubTab', this)">Company Guides</button>
+            </div>
+
+            <!-- Subtab 1: Aptitude Tests -->
+            <div id="aptitudeSubTab" class="prep-subtab-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div>
+                        <label style="display:inline; margin-right: 8px;">Select Category:</label>
+                        <select id="aptCategorySelect" onchange="loadAptitudeQuestions()" style="width:auto; display:inline-block; margin-bottom:0;">
+                            <option value="All">All Categories</option>
+                            <option value="Quantitative">Quantitative Aptitude</option>
+                            <option value="Logical">Logical Reasoning</option>
+                            <option value="Verbal">Verbal Ability</option>
+                        </select>
+                    </div>
+                    <div id="aptScorePill" class="badge badge-primary" style="display:none;"></div>
+                </div>
+
+                <div id="aptitudeQuizContainer">
+                    <div style="padding:20px; text-align:center;">Loading aptitude quiz questions...</div>
+                </div>
+            </div>
+
+            <!-- Subtab 2: Coding Challenges -->
+            <div id="codingSubTab" class="prep-subtab-content" style="display:none;">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Challenge Title</th>
+                                <th>Category</th>
+                                <th>Difficulty</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="codingChallengesTable">
+                            <tr><td colspan="5" style="text-align:center;">Loading coding challenges...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Subtab 3: Mock Interview Simulator -->
+            <div id="mockSubTab" class="prep-subtab-content" style="display:none;">
+                <div class="readiness-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 18px;">
+                        <div>
+                            <h3>Interactive Mock Interview Simulator</h3>
+                            <p style="font-size: 13px; color: var(--text-muted);">Answer real technical and behavioral interview questions and receive automated STAR evaluation.</p>
+                        </div>
+                        <select id="mockRoleSelect" onchange="loadMockQuestions()" style="width:auto; margin-bottom:0;">
+                            <option value="Software Engineer">Software Engineer Track</option>
+                            <option value="Full-Stack Developer">Full-Stack Developer Track</option>
+                            <option value="HR & Behavioral">HR & Behavioral Track</option>
+                        </select>
+                    </div>
+
+                    <div id="mockQuestionsContainer">
+                        <div style="padding:20px; text-align:center;">Loading interview questions...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subtab 4: Company Guides -->
+            <div id="guidesSubTab" class="prep-subtab-content" style="display:none;">
+                <div id="companyGuidesContainer" class="job-grid">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             TAB 6: PLACEMENT DRIVE CALENDAR & TIMELINE
+             ========================================== -->
+        <section id="timelineTab" class="dashboard-tab-panel" style="display:none;">
+            <div class="dashboard-header">
+                <div>
+                    <h1>Placement Drive Calendar & Schedules</h1>
+                    <p>Track visiting company campus visits, application deadlines, online tests, interviews, and upcoming drives.</p>
+                </div>
+                <button onclick="loadCalendarEvents()" class="btn btn-secondary">🔄 Refresh Calendar</button>
+            </div>
+
+            <!-- Calendar Category Filter Pills -->
+            <div class="calendar-filter-bar">
+                <button class="calendar-pill active" onclick="filterStudentCalendar('all', this)">All Events</button>
+                <button class="calendar-pill" onclick="filterStudentCalendar('visit', this)">🏢 Company Visits</button>
+                <button class="calendar-pill" onclick="filterStudentCalendar('deadline', this)">⏳ Application Deadlines</button>
+                <button class="calendar-pill" onclick="filterStudentCalendar('test', this)">📝 Assessment Tests</button>
+                <button class="calendar-pill" onclick="filterStudentCalendar('interview', this)">🎤 Interviews</button>
+                <button class="calendar-pill" onclick="filterStudentCalendar('upcoming', this)">🚀 Upcoming Drives</button>
+            </div>
+
+            <div id="calendarEventsContainer" style="display: flex; flex-direction: column; gap: 14px;">
+                <!-- Populated dynamically -->
+            </div>
+        </section>
+
+        <!-- ==========================================
+             TAB: NOTIFICATIONS CENTER
+             ========================================== -->
+        <section id="notificationsTab" class="dashboard-tab-panel" style="display:none;">
+            <div class="dashboard-header">
+                <div>
+                    <h1>Placement Notifications Center</h1>
+                    <p>Real-time notifications about new drives, approaching application deadlines, shortlisting, and interview schedules.</p>
+                </div>
+                <button onclick="markAllStudentNotificationsRead()" class="btn btn-secondary">✓ Mark All as Read</button>
+            </div>
+
+            <!-- Notifications Category Filter Bar -->
+            <div class="calendar-filter-bar">
+                <button class="calendar-pill active" onclick="filterStudentNotifications('all', this)">All Notifications</button>
+                <button class="calendar-pill" onclick="filterStudentNotifications('drive', this)">📢 New Drives</button>
+                <button class="calendar-pill" onclick="filterStudentNotifications('deadline', this)">⏳ Deadlines</button>
+                <button class="calendar-pill" onclick="filterStudentNotifications('shortlist', this)">🎯 Shortlisting</button>
+                <button class="calendar-pill" onclick="filterStudentNotifications('interview', this)">🎤 Interviews</button>
+            </div>
+
+            <div id="studentNotificationsFullList" style="display:flex; flex-direction:column; gap:12px;">
+                <div style="padding:24px; text-align:center; color:var(--text-muted);">Loading notifications...</div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             TAB: INSTITUTIONAL PLACEMENT ANALYTICS
+             ========================================== -->
+        <section id="analyticsTab" class="dashboard-tab-panel" style="display:none;">
+            <div class="dashboard-header">
+                <div>
+                    <h1>Campus Placement Analytics & Statistics</h1>
+                    <p>Live database statistics: department-wise placement rates, salary benchmarks, and institutional trends.</p>
+                </div>
+                <button onclick="loadStudentPlacementAnalytics()" class="btn btn-secondary">🔄 Refresh Analytics</button>
+            </div>
+
+            <!-- KPI Cards Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <h3>Registered Cohort</h3>
+                        <span class="stat-icon">👨‍🎓</span>
+                    </div>
+                    <strong id="stuAnalyticsTotalStudents">0</strong>
+                    <span class="stat-subtitle">Graduating candidates</span>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <h3>Placement Rate</h3>
+                        <span class="stat-icon">🎯</span>
+                    </div>
+                    <strong id="stuAnalyticsPlacementRate" style="color:var(--success);">0%</strong>
+                    <span class="stat-subtitle" id="stuAnalyticsPlacedCount">0 placed</span>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <h3>Highest CTC</h3>
+                        <span class="stat-icon">💰</span>
+                    </div>
+                    <strong id="stuAnalyticsHighestCTC" style="color:var(--primary);">0 LPA</strong>
+                    <span class="stat-subtitle">Top campus offer</span>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <h3>Average CTC</h3>
+                        <span class="stat-icon">📊</span>
+                    </div>
+                    <strong id="stuAnalyticsAvgCTC">0 LPA</strong>
+                    <span class="stat-subtitle" id="stuAnalyticsMedianCTC">Median: 0 LPA</span>
+                </div>
+            </div>
+
+            <!-- Placement Analytics Interactive Charts Grid -->
+            <div class="charts-grid">
+                <!-- 1. Department-Wise Placement Chart -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Department-Wise Placement Distribution</h3>
+                        <p>Total Registered Students vs Placed Candidates by Department</p>
+                    </div>
+                    <div class="chart-canvas-wrapper">
+                        <canvas id="studentDeptPlacementChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 2. Package Statistics Chart -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Salary Packages Comparative Analysis (LPA)</h3>
+                        <p>Highest CTC, Average CTC, Median CTC, and Minimum CTC Benchmarks</p>
+                    </div>
+                    <div class="chart-canvas-wrapper">
+                        <canvas id="studentSalaryStatsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 3. Placement Percentage Donut Chart -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Overall Placement Percentage</h3>
+                        <p>Cohort Placement Ratio (Placed vs Remaining Candidates)</p>
+                    </div>
+                    <div class="chart-canvas-wrapper">
+                        <canvas id="studentPlacementDonutChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Branch-Wise Placement Rates Table -->
+            <div class="readiness-card" style="margin-top: 10px;">
+                <h3>Department Placement Breakdown</h3>
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Live branch-wise hiring ratios calculated from database records.</p>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Department / Branch</th>
+                                <th>Total Students</th>
+                                <th>Placed</th>
+                                <th>Placement Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentBranchStatsTable">
+                            <tr><td colspan="4" style="text-align:center;">Loading department metrics...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             TAB 7: ALUMNI & MENTORSHIP (FEATURE 8)
+             ========================================== -->
+        <section id="alumniTab" class="dashboard-tab-panel" style="display:none;">
+            <div class="dashboard-header">
+                <div>
+                    <h1>Alumni Mentorship & Interview Experiences</h1>
+                    <p>Read real interview breakdowns shared by placed seniors or submit your own interview experience.</p>
+                </div>
+                <button onclick="openModal('shareExperienceModal')" class="btn btn-primary">+ Share Experience</button>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+                <input type="text" id="alumniSearchInput" placeholder="Filter by company (e.g. TCS, Infosys, Accenture)..." oninput="filterAlumniExperiences()" style="max-width:400px; margin-bottom:0;">
+            </div>
+
+            <div id="alumniExperiencesList" class="job-grid">
+                <!-- Dynamically populated -->
+            </div>
+
+            <!-- Mentorship Q&A Board -->
+            <div style="margin-top: 40px;">
+                <div class="dashboard-header" style="margin-bottom: 12px;">
+                    <div>
+                        <h2>Alumni Mentorship Q&A Board</h2>
+                        <p>Ask technical and career questions directly to verified placed seniors.</p>
+                    </div>
+                    <button onclick="openModal('askQuestionModal')" class="btn btn-secondary">+ Ask Question</button>
+                </div>
+                <div id="mentorshipQueriesList" style="display: flex; flex-direction: column; gap: 14px;">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             TAB 8: OFFER COMPARISON TOOL (FEATURE 9)
+             ========================================== -->
+        <section id="offersTab" class="dashboard-tab-panel" style="display:none;">
+            <div class="dashboard-header">
+                <div>
+                    <h1>Placement Offer Comparison Tool</h1>
+                    <p>Side-by-side evaluation of base salary, variable pay, in-hand earnings, cost of living, and service agreements.</p>
+                </div>
+            </div>
+
+            <div class="readiness-card">
+                <h3>Compare Job Offers</h3>
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+                    Enter offer parameters to calculate net monthly in-hand cash, savings capacity, and overall offer quality.
+                </p>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px;">
+                    <!-- Offer 1 Form -->
+                    <div style="background:var(--bg-subtle); padding:16px; border-radius:var(--radius-sm);">
+                        <h4>Offer A</h4>
+                        <label>Company Name</label>
+                        <input type="text" id="compOfferA_name" value="TCS Digital">
+                        <label>Total CTC (LPA)</label>
+                        <input type="number" id="compOfferA_ctc" step="0.1" value="6.5">
+                        <label>Base Salary (LPA)</label>
+                        <input type="number" id="compOfferA_base" step="0.1" value="5.2">
+                        <label>Location</label>
+                        <input type="text" id="compOfferA_loc" value="Mumbai">
+                        <label>Work Mode</label>
+                        <select id="compOfferA_mode">
+                            <option value="Hybrid" selected>Hybrid</option>
+                            <option value="On-Site">On-Site</option>
+                            <option value="Remote">Remote</option>
+                        </select>
+                        <label>Bond Duration (Months)</label>
+                        <input type="number" id="compOfferA_bond" value="12">
+                    </div>
+
+                    <!-- Offer 2 Form -->
+                    <div style="background:var(--bg-subtle); padding:16px; border-radius:var(--radius-sm);">
+                        <h4>Offer B</h4>
+                        <label>Company Name</label>
+                        <input type="text" id="compOfferB_name" value="Accenture ASE">
+                        <label>Total CTC (LPA)</label>
+                        <input type="number" id="compOfferB_ctc" step="0.1" value="7.2">
+                        <label>Base Salary (LPA)</label>
+                        <input type="number" id="compOfferB_base" step="0.1" value="6.0">
+                        <label>Location</label>
+                        <input type="text" id="compOfferB_loc" value="Bangalore">
+                        <label>Work Mode</label>
+                        <select id="compOfferB_mode">
+                            <option value="On-Site" selected>On-Site</option>
+                            <option value="Hybrid">Hybrid</option>
+                            <option value="Remote">Remote</option>
+                        </select>
+                        <label>Bond Duration (Months)</label>
+                        <input type="number" id="compOfferB_bond" value="0">
+                    </div>
+                </div>
+
+                <div style="margin-top: 18px; text-align: center;">
+                    <button onclick="executeOfferComparison()" class="btn btn-primary" style="padding: 12px 30px;">
+                        ⚖️ Run Comprehensive Comparison
+                    </button>
+                </div>
+            </div>
+
+            <!-- Comparison Matrix Container -->
+            <div id="offerComparisonResult" style="margin-top: 24px;"></div>
+        </section>
+
+    </main>
+</div>
+
+<!-- ==========================================
+     MODAL 1: TRANSPARENT ELIGIBILITY CHECKER (FEATURE 5)
+     ========================================== -->
+<div class="modal-backdrop" id="eligibilityModal">
+    <div class="modal-box">
+        <button class="modal-close-btn" onclick="closeModal('eligibilityModal')">✕</button>
+        <h2 id="eligModalJobTitle">Eligibility Breakdown</h2>
+        <p id="eligModalCompany" style="color:var(--primary); font-weight:600;"></p>
+
+        <div class="eligibility-checklist" id="eligModalRulesList">
+            <!-- Dynamically populated -->
+        </div>
+
+        <div id="eligModalSummaryAlert" class="eligibility-summary-alert">
+            <!-- Dynamically populated -->
+        </div>
+
+        <div style="margin-top: 20px; text-align: right;">
+            <button class="btn btn-secondary" onclick="closeModal('eligibilityModal')">Close</button>
+            <button id="eligModalApplyBtn" class="btn btn-primary" style="display:none;">Apply Now</button>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================
+     MODAL 2: APPLICATION TIMELINE STEPPER (FEATURE 7)
+     ========================================== -->
+<div class="modal-backdrop" id="timelineModal">
+    <div class="modal-box">
+        <button class="modal-close-btn" onclick="closeModal('timelineModal')">✕</button>
+        <h2 id="timelineModalTitle">Application Timeline</h2>
+        <p id="timelineModalCompany" style="color:var(--text-secondary);"></p>
+
+        <div class="stepper-container" id="timelineModalStepper">
+            <!-- Dynamically populated -->
+        </div>
+
+        <h4>Chronological Milestones</h4>
+        <div class="timeline-logs" id="timelineModalLogs">
+            <!-- Dynamically populated -->
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================
+     MODAL 3: CODING CHALLENGE RUNNER
+     ========================================== -->
+<div class="modal-backdrop" id="codingModal">
+    <div class="modal-box" style="max-width: 750px;">
+        <button class="modal-close-btn" onclick="closeModal('codingModal')">✕</button>
+        <h2 id="codingModalTitle">Coding Challenge</h2>
+        <span id="codingModalDifficulty" class="badge badge-primary"></span>
+        <p id="codingModalDesc" style="margin: 12px 0; font-size:14px; line-height: 1.5;"></p>
+
+        <label>Solution Editor (JavaScript):</label>
+        <textarea id="codingCodeEditor" rows="10" style="font-family: monospace; font-size: 13px;"></textarea>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+            <div id="codingTestResultBadge"></div>
+            <button onclick="submitActiveCodingChallenge()" class="btn btn-primary" id="runCodeBtn">Run Code & Submit</button>
+        </div>
+
+        <div id="codingTestCasesBox" style="margin-top: 16px;"></div>
+    </div>
+</div>
+
+<!-- ==========================================
+     MODAL 4: SHARE INTERVIEW EXPERIENCE (FEATURE 8)
+     ========================================== -->
+<div class="modal-backdrop" id="shareExperienceModal">
+    <div class="modal-box">
+        <button class="modal-close-btn" onclick="closeModal('shareExperienceModal')">✕</button>
+        <h2>Share Interview Experience</h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Help your junior peers prepare for placement drives. Submissions are moderated before publication.</p>
+
+        <form id="experienceForm" onsubmit="submitInterviewExperience(event)">
+            <label>Company Name *</label>
+            <input type="text" id="expCompany" required placeholder="e.g. TCS, Infosys, Accenture">
+
+            <label>Job Role *</label>
+            <input type="text" id="expRole" required placeholder="e.g. Software Engineer, Associate Consultant">
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div>
+                    <label>Placement Year</label>
+                    <input type="text" id="expYear" value="2025">
+                </div>
+                <div>
+                    <label>Salary Package</label>
+                    <input type="text" id="expSalary" placeholder="e.g. 6.5 LPA">
+                </div>
+            </div>
+
+            <label>Overall Interview Difficulty</label>
+            <select id="expDifficulty">
+                <option value="Easy">Easy</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="Hard">Hard</option>
+            </select>
+
+            <label>Rounds & Questions Breakdown *</label>
+            <textarea id="expRounds" rows="4" required placeholder="Describe each round (Online Assessment, Technical, HR) and key questions asked..."></textarea>
+
+            <label>Preparation Tips for Students</label>
+            <textarea id="expTips" rows="2" placeholder="Key topics to focus on, project advice, or mistake warnings..."></textarea>
+
+            <div style="display: flex; align-items: center; gap: 8px; margin: 12px 0;">
+                <input type="checkbox" id="expAnonymous" style="width: auto; margin-bottom: 0;">
+                <label for="expAnonymous" style="margin-bottom: 0; font-weight: normal;">Post anonymously (Conceal my identity from other students)</label>
+            </div>
+
+            <div style="text-align: right; margin-top: 14px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('shareExperienceModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Submit for Moderation</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ==========================================
+     MODAL 5: ASK MENTORSHIP QUESTION
+     ========================================== -->
+<div class="modal-backdrop" id="askQuestionModal">
+    <div class="modal-box">
+        <button class="modal-close-btn" onclick="closeModal('askQuestionModal')">✕</button>
+        <h2>Ask Alumni Mentorship Question</h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Post a question to our network of alumni and placement coordinators.</p>
+
+        <form id="mentorshipForm" onsubmit="postMentorshipQuestion(event)">
+            <label>Topic / Domain *</label>
+            <input type="text" id="mentorTopic" required placeholder="e.g. Resume Building, Coding Assessments, System Design">
+
+            <label>Your Question *</label>
+            <textarea id="mentorQuestion" rows="4" required placeholder="Ask your specific career, interview, or preparation question..."></textarea>
+
+            <div style="text-align: right; margin-top: 14px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('askQuestionModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Post Question</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="common.js"></script>
+<script src="student.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - PlacementHub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="navbar">
+    <a href="index.html" class="logo">
+        🎓 PlacementHub
+    </a>
+    <div style="display:flex; align-items:center; gap:16px;">
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="jobs.html">Drives</a>
+            <a href="register.html">Register</a>
+        </nav>
+        <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+    </div>
+</header>
+
+<main style="max-width: 460px; margin: 40px auto; padding: 20px;">
+    <div class="readiness-card">
+        <h2>Welcome Back 👋</h2>
+        <p style="color:var(--text-muted); font-size:13px; margin-bottom: 20px;">Sign in to your authorized placement account</p>
+
+        <!-- Quick Demo Account Fillers -->
+        <div style="margin-bottom: 16px; padding: 12px; background:var(--bg-subtle); border-radius:var(--radius-sm); font-size:12px;">
+            <div style="font-weight:600; margin-bottom:6px;">Quick Fill Demo Account:</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button type="button" class="btn btn-sm btn-outline" onclick="fillDemo('rahul@student.edu', 'Student@123', 'STUDENT')">👨‍🎓 Student</button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="fillDemo('tcs@placement.edu', 'Company@123', 'COMPANY')">🏢 Recruiter</button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="fillDemo('admin@placement.edu', 'Admin@123', 'ADMIN')">🛡️ Admin</button>
+            </div>
+        </div>
+
+        <form id="loginForm">
+            <label>Email Address</label>
+            <input type="email" id="email" placeholder="Enter your email" required>
+
+            <label>Password</label>
+            <input type="password" id="password" placeholder="Enter your password" required>
+
+            <label>Login Role</label>
+            <select id="role" required>
+                <option value="">Select Role...</option>
+                <option value="STUDENT">Student Candidate</option>
+                <option value="COMPANY">Partner Recruiter</option>
+                <option value="ADMIN">Placement Officer / Admin</option>
+            </select>
+
+            <button type="submit" class="btn btn-primary btn-full" style="padding:12px;" id="loginBtn">
+                Sign In
+            </button>
+        </form>
+
+        <p id="loginMessage" style="margin-top:12px; font-size:13px; font-weight:600; text-align:center;"></p>
+
+        <p style="margin-top: 18px; text-align: center; font-size: 13px; color: var(--text-secondary);">
+            Don't have an account? <a href="register.html" style="color:var(--primary); font-weight:600;">Create an account</a>
+        </p>
+    </div>
+</main>
+
+<script src="common.js"></script>
+<script src="login.js"></script>
+<script>
+function fillDemo(email, pass, role) {
+    document.getElementById('email').value = email;
+    document.getElementById('password').value = pass;
+    document.getElementById('role').value = role;
+}
+</script>
+
+</body>
+</html>

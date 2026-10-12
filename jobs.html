@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Placement Drives - PlacementHub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="navbar">
+    <a href="index.html" class="logo">
+        🎓 PlacementHub
+    </a>
+    <div style="display:flex; align-items:center; gap:16px;">
+        <nav id="topNav">
+            <a href="index.html">Home</a>
+            <a href="jobs.html" class="active">Drives</a>
+            <a href="login.html" id="loginNavLink">Login</a>
+        </nav>
+        <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+        <div class="notif-wrapper" id="notifWrapperNav" style="display:none;">
+            <button class="notif-bell-btn" onclick="toggleNotifDropdown()" title="Notifications">
+                🔔
+                <span class="notif-badge" id="navbarNotifBadge" style="display:none;">0</span>
+            </button>
+            <div class="notif-dropdown" id="navbarNotifDropdown">
+                <div class="notif-header">
+                    <span>Notifications</span>
+                    <button onclick="markAllNotificationsRead()" class="btn btn-sm btn-outline" style="font-size:11px; padding:2px 8px;">Mark all read</button>
+                </div>
+                <div id="navbarNotifList">
+                    <div style="padding:16px; text-align:center; color:var(--text-muted);">Loading alerts...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="dashboard-content" style="max-width: 1200px; margin: 0 auto; padding: 40px 20px;">
+    <div class="dashboard-header">
+        <div>
+            <h1>Active Campus Placement Drives</h1>
+            <p>Explore verified institutional recruiting drives with transparent cutoffs, eligibility checks, and skill-gap analyzers.</p>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap;">
+        <input type="text" id="searchInput" placeholder="Search company, job role, skill, or location..." style="flex: 1; min-width: 280px; margin-bottom:0;">
+        <select id="branchFilter" onchange="filterJobsList()" style="width: auto; margin-bottom:0;">
+            <option value="">All Branches</option>
+            <option value="Computer Engineering">Computer Engineering</option>
+            <option value="Information Technology">Information Technology</option>
+            <option value="AI & ML">AI & ML</option>
+            <option value="Electronics">Electronics</option>
+        </select>
+        <select id="driveTypeFilter" onchange="filterJobsList()" style="width: auto; margin-bottom:0;">
+            <option value="all">All Placement Drives</option>
+            <option value="visiting">🏢 Visiting Campus Drives</option>
+        </select>
+    </div>
+
+    <div id="jobsContainer" class="job-grid">
+        <div class="skeleton" style="height: 250px;"></div>
+        <div class="skeleton" style="height: 250px;"></div>
+        <div class="skeleton" style="height: 250px;"></div>
+    </div>
+</main>
+
+<!-- Transparent Eligibility Checker Modal (Feature 5) -->
+<div class="modal-backdrop" id="eligibilityModal">
+    <div class="modal-box">
+        <button class="modal-close-btn" onclick="closeModal('eligibilityModal')">✕</button>
+        <h2 id="eligModalJobTitle">Eligibility Audit</h2>
+        <p id="eligModalCompany" style="color:var(--primary); font-weight:600;"></p>
+
+        <div class="eligibility-checklist" id="eligModalRulesList">
+            <!-- Dynamically populated -->
+        </div>
+
+        <div id="eligModalSummaryAlert" class="eligibility-summary-alert">
+            <!-- Dynamically populated -->
+        </div>
+
+        <div style="margin-top: 20px; text-align: right;">
+            <button class="btn btn-secondary" onclick="closeModal('eligibilityModal')">Close</button>
+            <button id="eligModalApplyBtn" class="btn btn-primary" style="display:none;">Apply Now</button>
+        </div>
+    </div>
+</div>
+
+<script src="common.js"></script>
+<script src="jobs.js"></script>
+
+</body>
+</html>
