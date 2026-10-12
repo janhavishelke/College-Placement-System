@@ -5,6 +5,7 @@ const { initDatabase } = require('./config/db');
 
 const authRoutes = require('./routes/auth.routes');
 const jobsRoutes = require('./routes/jobs.routes');
+const companiesRoutes = require('./routes/companies.routes');
 const applicationsRoutes = require('./routes/applications.routes');
 const profileRoutes = require('./routes/profile.routes');
 const statsRoutes = require('./routes/stats.routes');
@@ -40,6 +41,7 @@ app.get('/company-dashboard.html', (req, res) => {
 // Core API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobsRoutes);
+app.use('/api/companies', companiesRoutes);
 app.use('/api/applications', applicationsRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/stats', statsRoutes);

@@ -1,4 +1,4 @@
-const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:5000/api' : '/api';
+const API_BASE = window.PLACEMENT_API_BASE || ((window.location.protocol === 'file:' || (window.location.port && window.location.port !== '5000')) ? 'http://localhost:5000/api' : '/api');
 
 const container = document.getElementById("jobsContainer");
 let allJobs = [];
@@ -35,17 +35,29 @@ function updateNavbar() {
 async function loadJobs() {
     container.innerHTML = `<div class="skeleton" style="height: 250px;"></div><div class="skeleton" style="height: 250px;"></div>`;
     try {
-        const response = await fetch(`${API_BASE}/jobs`, { headers: getAuthHeaders() });
-        const data = await response.json();
+        let res = await fetch(`${API_BASE}/companies/visiting`, { headers: getAuthHeaders() });
+        let data = await res.json();
+        if (!data.success) {
+            res = await fetch(`${API_BASE}/jobs`, { headers: getAuthHeaders() });
+            data = await res.json();
+        }
 
-        if (data.success && Array.isArray(data.jobs)) {
-            allJobs = data.jobs;
+        const list = data.companies || data.visitingCompanies || data.jobs || [];
+
+        if (data.success && Array.isArray(list)) {
+            allJobs = list;
             displayJobs(allJobs);
         } else {
             container.innerHTML = "<div class='empty-state'><p>No active placement drives currently scheduled.</p></div>";
         }
     } catch (err) {
-        container.innerHTML = "<p style='color: var(--danger);'>Unable to connect to server to load jobs.</p>";
+        console.error("Error loading drives:", err);
+        container.innerHTML = `
+            <div style="grid-column:1 / -1; text-align:center; padding:30px;">
+                <p style="color: var(--danger); margin-bottom:12px;">Unable to connect to server to load placement drives.</p>
+                <button onclick="loadJobs()" class="btn btn-sm btn-secondary">🔄 Retry Loading</button>
+            </div>
+        `;
     }
 }
 
@@ -112,7 +124,10 @@ function displayJobs(list) {
                 </div>
             </div>
 
-            <div class="rec-actions" style="margin-top: 18px;">
+            <div class="rec-actions" style="margin-top: 18px; gap:8px;">
+                <button class="btn btn-sm btn-outline" style="flex:1;" onclick="openCompanyDetailsModal(${job.id})">
+                    🏢 View Details
+                </button>
                 <button class="btn btn-sm btn-outline" style="flex:1;" onclick="openJobEligibilityModal(${job.id})">
                     🔍 Eligibility Audit
                 </button>

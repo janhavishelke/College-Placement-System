@@ -1,4 +1,4 @@
-const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:5000/api' : '/api';
+const API_BASE = window.PLACEMENT_API_BASE || ((window.location.protocol === 'file:' || (window.location.port && window.location.port !== '5000')) ? 'http://localhost:5000/api' : '/api');
 
 const token = localStorage.getItem("token");
 const role = localStorage.getItem("userRole");
@@ -193,9 +193,12 @@ function createVisitingDriveCardHtml(job, profile) {
                 </div>
             </div>
 
-            <div class="rec-actions" style="margin-top: 14px;">
+            <div class="rec-actions" style="margin-top: 14px; gap:8px;">
+                <button class="btn btn-sm btn-outline" onclick="openCompanyDetailsModal(${job.id})" style="flex:1;">
+                    🏢 View Details
+                </button>
                 <button class="btn btn-sm btn-outline" onclick="openEligibilityModal(${job.id})" style="flex:1;">
-                    📋 Audit Eligibility
+                    📋 Audit Criteria
                 </button>
                 ${actionButtonHtml}
             </div>
@@ -208,14 +211,28 @@ async function loadVisitingCompanies() {
     const fullContainer = document.getElementById("visitingCompaniesFullContainer");
     const badgeEl = document.getElementById("visitingDriveCountBadge");
 
+    if (overviewContainer && !overviewContainer.innerHTML.trim()) {
+        overviewContainer.innerHTML = `<div class="skeleton" style="height:250px;"></div><div class="skeleton" style="height:250px;"></div>`;
+    }
+    if (fullContainer && !fullContainer.innerHTML.trim()) {
+        fullContainer.innerHTML = `<div class="skeleton" style="height:250px;"></div><div class="skeleton" style="height:250px;"></div>`;
+    }
+
     try {
         const [profile, jobsRes] = await Promise.all([
             getOrFetchStudentProfile(),
-            fetch(`${API_BASE}/jobs`, { headers: getAuthHeaders() }).then(r => r.json())
+            fetch(`${API_BASE}/companies/visiting`, { headers: getAuthHeaders() })
+                .then(r => r.json())
+                .catch(async () => {
+                    const fallback = await fetch(`${API_BASE}/jobs`, { headers: getAuthHeaders() });
+                    return fallback.json();
+                })
         ]);
 
-        if (jobsRes.success && Array.isArray(jobsRes.jobs)) {
-            allStudentVisitingDrives = jobsRes.jobs;
+        const driveList = jobsRes.companies || jobsRes.visitingCompanies || jobsRes.jobs || [];
+
+        if (jobsRes.success && Array.isArray(driveList)) {
+            allStudentVisitingDrives = driveList;
 
             if (badgeEl) {
                 badgeEl.innerText = allStudentVisitingDrives.length;
@@ -242,11 +259,27 @@ async function loadVisitingCompanies() {
             if (fullContainer) {
                 renderVisitingDrivesList(allStudentVisitingDrives, profile);
             }
+        } else {
+            throw new Error(jobsRes.message || 'Failed to retrieve visiting companies');
         }
     } catch (e) {
         console.error("Error loading visiting companies:", e);
-        if (overviewContainer) overviewContainer.innerHTML = `<p style="color:var(--danger);">Error loading visiting drives.</p>`;
-        if (fullContainer) fullContainer.innerHTML = `<p style="color:var(--danger);">Error loading visiting drives schedule.</p>`;
+        if (overviewContainer) {
+            overviewContainer.innerHTML = `
+                <div style="grid-column:1 / -1; text-align:center; padding:24px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:12px;">
+                    <p style="color:var(--danger); margin-bottom:10px;">Error loading visiting drives from server.</p>
+                    <button onclick="loadVisitingCompanies()" class="btn btn-sm btn-secondary">🔄 Retry</button>
+                </div>
+            `;
+        }
+        if (fullContainer) {
+            fullContainer.innerHTML = `
+                <div style="grid-column:1 / -1; text-align:center; padding:24px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:12px;">
+                    <p style="color:var(--danger); margin-bottom:10px;">Error loading visiting drives schedule.</p>
+                    <button onclick="loadVisitingCompanies()" class="btn btn-sm btn-secondary">🔄 Retry</button>
+                </div>
+            `;
+        }
     }
 }
 

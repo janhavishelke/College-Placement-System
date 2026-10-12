@@ -5,10 +5,11 @@ const { authenticateToken, optionalAuthenticate, authorizeRoles } = require('../
 
 // Public or optionally authenticated
 router.get('/', optionalAuthenticate, jobsController.getAllJobs);
-router.get('/:id', jobsController.getJobById);
+router.get('/:id', optionalAuthenticate, jobsController.getJobById);
 
 // Company & Admin only
 router.post('/', authenticateToken, authorizeRoles('COMPANY', 'ADMIN'), jobsController.createJob);
+router.put('/:id', authenticateToken, authorizeRoles('COMPANY', 'ADMIN'), jobsController.updateJob);
 router.delete('/:id', authenticateToken, authorizeRoles('COMPANY', 'ADMIN'), jobsController.deleteJob);
 
 module.exports = router;

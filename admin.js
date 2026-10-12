@@ -1,4 +1,4 @@
-const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:5000/api' : '/api';
+const API_BASE = window.PLACEMENT_API_BASE || ((window.location.protocol === 'file:' || (window.location.port && window.location.port !== '5000')) ? 'http://localhost:5000/api' : '/api');
 
 const token = localStorage.getItem("token");
 const role = localStorage.getItem("userRole");
@@ -538,27 +538,35 @@ async function loadVisitingDrives() {
     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Loading scheduled drives...</td></tr>`;
 
     try {
-        const res = await fetch(`${API_BASE}/jobs`, { headers: getAuthHeaders() });
-        const data = await res.json();
+        let res = await fetch(`${API_BASE}/companies/visiting`, { headers: getAuthHeaders() });
+        let data = await res.json();
+        if (!data.success) {
+            res = await fetch(`${API_BASE}/jobs`, { headers: getAuthHeaders() });
+            data = await res.json();
+        }
 
-        if (data.success && Array.isArray(data.jobs)) {
-            allVisitingDrives = data.jobs;
+        const list = data.companies || data.visitingCompanies || data.jobs || [];
 
-            if (data.jobs.length === 0) {
+        if (data.success && Array.isArray(list)) {
+            allVisitingDrives = list;
+
+            if (list.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:30px;">No campus recruitment drives announced yet. Use the form above to announce a visiting company.</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = data.jobs.map(job => {
+            tbody.innerHTML = list.map(job => {
                 const visitDisplay = job.visitDate ? `<strong>${escapeHtml(job.visitDate)}</strong>` : '<span style="color:var(--text-muted);">TBD</span>';
                 const deadlineDisplay = job.deadline ? `<span>${escapeHtml(job.deadline)}</span>` : '<span style="color:var(--text-muted);">Open</span>';
                 const applicantCount = job.applicantCount || 0;
+                const compName = job.company || job.company_name;
 
                 return `
                     <tr>
                         <td>
-                            <strong>${escapeHtml(job.company)}</strong><br>
+                            <strong>${escapeHtml(compName)}</strong><br>
                             <span class="badge badge-primary" style="font-size:10px; margin-top:2px;">${escapeHtml(job.workMode || 'On-Campus')}</span>
+                            ${job.recruitmentStatus ? `<span class="badge badge-success" style="font-size:10px; margin-top:2px; margin-left:4px;">${escapeHtml(job.recruitmentStatus)}</span>` : ''}
                         </td>
                         <td>
                             <strong>${escapeHtml(job.title)}</strong><br>
@@ -571,14 +579,14 @@ async function loadVisitingDrives() {
                             <span class="badge badge-warning" style="font-size:12px;">⏳ ${deadlineDisplay}</span>
                         </td>
                         <td>
-                            <strong style="color:var(--success);">${escapeHtml(job.salary)}</strong>
+                            <strong style="color:var(--success);">${escapeHtml(job.salary || job.package)}</strong>
                             ${job.baseSalary ? `<br><small style="color:var(--text-muted);">Base: ${escapeHtml(job.baseSalary)}</small>` : ''}
                         </td>
                         <td>
                             <div style="font-size:12px;">
                                 <span>Min CGPA: <strong>${job.cgpa}</strong></span> | 
-                                <span>Backlogs: <strong>≤ ${job.maxBacklogs}</strong></span><br>
-                                <small style="color:var(--text-muted);">${escapeHtml(job.eligibleBranches)}</small>
+                                <span>Backlogs: <strong>≤ ${job.maxBacklogs !== undefined ? job.maxBacklogs : 0}</strong></span><br>
+                                <small style="color:var(--text-muted);">${escapeHtml(job.eligibleBranches || job.eligible_branches)}</small>
                             </div>
                         </td>
                         <td>
@@ -588,10 +596,13 @@ async function loadVisitingDrives() {
                         </td>
                         <td>
                             <div style="display:flex; flex-direction:column; gap:6px;">
-                                <button onclick="viewCompanyApplicants('${escapeHtml(job.company)}')" class="btn btn-sm btn-outline" style="font-size:11px; padding:4px 8px;">
+                                <button onclick="openCompanyDetailsModal(${job.id})" class="btn btn-sm btn-outline" style="font-size:11px; padding:4px 8px;">
+                                    🏢 Details
+                                </button>
+                                <button onclick="viewCompanyApplicants('${escapeHtml(compName)}')" class="btn btn-sm btn-outline" style="font-size:11px; padding:4px 8px;">
                                     👥 Applicants (${applicantCount})
                                 </button>
-                                <button onclick="deleteDrive(${job.id}, '${escapeHtml(job.company)}')" class="btn btn-sm btn-secondary" style="color:var(--danger); font-size:11px; padding:4px 8px;">
+                                <button onclick="deleteDrive(${job.id}, '${escapeHtml(compName)}')" class="btn btn-sm btn-secondary" style="color:var(--danger); font-size:11px; padding:4px 8px;">
                                     🗑️ Remove
                                 </button>
                             </div>
@@ -604,7 +615,10 @@ async function loadVisitingDrives() {
         }
     } catch (err) {
         console.error("Error loading visiting drives:", err);
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--danger);">Error loading visiting drives.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--danger); padding:20px;">
+            Error loading visiting drives from server.<br>
+            <button onclick="loadVisitingDrives()" class="btn btn-sm btn-secondary" style="margin-top:8px;">🔄 Retry</button>
+        </td></tr>`;
     }
 }
 

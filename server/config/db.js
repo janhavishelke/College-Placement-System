@@ -127,6 +127,13 @@ async function initDatabase() {
     await ensureColumn('jobs', 'visit_date', "TEXT DEFAULT ''");
     await ensureColumn('jobs', 'test_date', "TEXT DEFAULT ''");
     await ensureColumn('jobs', 'interview_date', "TEXT DEFAULT ''");
+    await ensureColumn('jobs', 'logo', "TEXT DEFAULT ''");
+    await ensureColumn('jobs', 'website', "TEXT DEFAULT ''");
+    await ensureColumn('jobs', 'recruitment_status', "TEXT DEFAULT 'Upcoming'");
+
+    await ensureColumn('users', 'company_logo', "TEXT DEFAULT ''");
+    await ensureColumn('users', 'company_website', "TEXT DEFAULT ''");
+    await ensureColumn('users', 'company_description', "TEXT DEFAULT ''");
 
     await ensureColumn('applications', 'stage', "TEXT DEFAULT 'Applied'");
     await ensureColumn('applications', 'stage_notes', "TEXT DEFAULT ''");
@@ -177,11 +184,22 @@ async function initDatabase() {
     await run(`UPDATE users SET projects = 'Deep Learning Medical Image Classifier (PyTorch, OpenCV) - Achieved 94% accuracy on multi-class scan dataset; Real-time Stock Sentiment Analyzer (Python, NLP, Pandas)' WHERE email = 'amit@student.edu' AND (projects IS NULL OR projects = '')`);
     await run(`UPDATE users SET projects = 'Cloud-Native Task Manager (React, Node.js, SQLite) - Implemented real-time updates and task analytics' WHERE (projects IS NULL OR projects = '') AND role = 'STUDENT'`);
 
-    await run(`UPDATE jobs SET eligible_branches = 'Computer Engineering, Information Technology, AI & ML, Electronics', max_backlogs = 0, deadline = '2026-11-20', visit_date = '2026-11-28', test_date = '2026-11-22', interview_date = '2026-11-29', role_category = 'Software Engineering', base_salary = '5.2 LPA', bonus = '1.3 LPA', bond_months = 12, work_mode = 'Hybrid' WHERE company_name = 'TCS' AND (eligible_branches IS NULL OR eligible_branches = '' OR visit_date = '')`);
-    await run(`UPDATE jobs SET eligible_branches = 'Computer Engineering, Information Technology, AI & ML', max_backlogs = 0, deadline = '2026-11-25', visit_date = '2026-12-02', test_date = '2026-11-27', interview_date = '2026-12-03', role_category = 'Software Engineering', base_salary = '4.8 LPA', bonus = '0.7 LPA', bond_months = 12, work_mode = 'On-Site' WHERE company_name = 'Infosys' AND (eligible_branches IS NULL OR eligible_branches = '' OR visit_date = '')`);
-    await run(`UPDATE jobs SET eligible_branches = 'Computer Engineering, Information Technology, Electronics', max_backlogs = 0, deadline = '2026-12-05', visit_date = '2026-12-10', test_date = '2026-12-07', interview_date = '2026-12-12', role_category = 'Full Stack & Cloud', base_salary = '6.0 LPA', bonus = '1.2 LPA', bond_months = 0, work_mode = 'Hybrid' WHERE company_name = 'Accenture' AND (eligible_branches IS NULL OR eligible_branches = '' OR visit_date = '')`);
-    await run(`UPDATE jobs SET eligible_branches = 'All Branches', max_backlogs = 1, deadline = '2026-11-30', visit_date = '2026-12-05', test_date = '2026-12-02', interview_date = '2026-12-06', role_category = 'Software Engineering', base_salary = '4.5 LPA', bonus = '0.5 LPA', bond_months = 24, work_mode = 'On-Site' WHERE company_name = 'Capgemini' AND (eligible_branches IS NULL OR eligible_branches = '' OR visit_date = '')`);
-    await run(`UPDATE jobs SET eligible_branches = 'Computer Engineering, Information Technology, AI & ML', max_backlogs = 0, deadline = '2026-11-20', visit_date = '2026-11-28', test_date = '2026-11-22', interview_date = '2026-11-29', role_category = 'Software Engineering' WHERE eligible_branches IS NULL OR eligible_branches = ''`);
+    // Ensure company users have logos and websites
+    await run(`UPDATE users SET company_website = 'https://www.tcs.com', company_description = 'Global leader in IT services, consulting, and business solutions.' WHERE email = 'tcs@placement.edu' AND (company_website IS NULL OR company_website = '')`);
+    await run(`UPDATE users SET company_website = 'https://www.infosys.com', company_description = 'Next-generation digital services and consulting leader.' WHERE email = 'infosys@placement.edu' AND (company_website IS NULL OR company_website = '')`);
+    await run(`UPDATE users SET company_website = 'https://www.accenture.com', company_description = 'Global professional services company with leading capabilities in digital, cloud, and security.' WHERE email = 'accenture@placement.edu' AND (company_website IS NULL OR company_website = '')`);
+    await run(`UPDATE users SET company_website = 'https://www.capgemini.com', company_description = 'Global leader in partnering with companies to transform and manage their business through technology.' WHERE email = 'capgemini@placement.edu' AND (company_website IS NULL OR company_website = '')`);
+
+    // Ensure all jobs have complete visiting drive metadata (visit_date, website, logo, recruitment_status)
+    await run(`UPDATE jobs SET eligible_branches = 'Computer Engineering, Information Technology, AI & ML, Electronics', max_backlogs = 0, deadline = '2026-11-20', visit_date = '2026-11-28', test_date = '2026-11-22', interview_date = '2026-11-29', role_category = 'Software Engineering', base_salary = '5.2 LPA', bonus = '1.3 LPA', bond_months = 12, work_mode = 'Hybrid', website = 'https://www.tcs.com', recruitment_status = 'Active' WHERE company_name LIKE '%TCS%' AND (visit_date IS NULL OR visit_date = '' OR website IS NULL OR website = '')`);
+    await run(`UPDATE jobs SET eligible_branches = 'Computer Engineering, Information Technology, AI & ML', max_backlogs = 0, deadline = '2026-11-25', visit_date = '2026-12-02', test_date = '2026-11-27', interview_date = '2026-12-03', role_category = 'Software Engineering', base_salary = '4.8 LPA', bonus = '0.7 LPA', bond_months = 12, work_mode = 'On-Site', website = 'https://www.infosys.com', recruitment_status = 'Active' WHERE company_name LIKE '%Infosys%' AND (visit_date IS NULL OR visit_date = '' OR website IS NULL OR website = '')`);
+    await run(`UPDATE jobs SET eligible_branches = 'Computer Engineering, Information Technology, Electronics', max_backlogs = 0, deadline = '2026-12-05', visit_date = '2026-12-10', test_date = '2026-12-07', interview_date = '2026-12-12', role_category = 'Full Stack & Cloud', base_salary = '6.0 LPA', bonus = '1.2 LPA', bond_months = 0, work_mode = 'Hybrid', website = 'https://www.accenture.com', recruitment_status = 'Upcoming' WHERE company_name LIKE '%Accenture%' AND (visit_date IS NULL OR visit_date = '' OR website IS NULL OR website = '')`);
+    await run(`UPDATE jobs SET eligible_branches = 'All Branches', max_backlogs = 1, deadline = '2026-11-30', visit_date = '2026-12-05', test_date = '2026-12-02', interview_date = '2026-12-06', role_category = 'Software Engineering', base_salary = '4.5 LPA', bonus = '0.5 LPA', bond_months = 24, work_mode = 'On-Site', website = 'https://www.capgemini.com', recruitment_status = 'Upcoming' WHERE company_name LIKE '%Capgemini%' AND (visit_date IS NULL OR visit_date = '' OR website IS NULL OR website = '')`);
+    await run(`UPDATE jobs SET eligible_branches = 'Computer Engineering, Information Technology, AI & ML', max_backlogs = 0, deadline = '2026-11-15', visit_date = '2026-11-25', test_date = '2026-11-18', interview_date = '2026-11-26', role_category = 'Software Engineering', base_salary = '14.5 LPA', bonus = '3.5 LPA', bond_months = 0, work_mode = 'On-Campus', website = 'https://careers.microsoft.com', recruitment_status = 'Active' WHERE company_name LIKE '%Microsoft%' AND (visit_date IS NULL OR visit_date = '' OR website IS NULL OR website = '')`);
+    
+    // Fallback: Ensure no job has blank visit_date or recruitment_status
+    await run(`UPDATE jobs SET visit_date = COALESCE(NULLIF(deadline, ''), '2026-12-15') WHERE visit_date IS NULL OR visit_date = ''`);
+    await run(`UPDATE jobs SET recruitment_status = 'Upcoming' WHERE recruitment_status IS NULL OR recruitment_status = ''`);
 
     // 2. Application Timeline
     await run(`
