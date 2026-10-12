@@ -24,8 +24,38 @@ const assistantRoutes = require('./routes/assistant.routes');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Enable CORS for all origins (supports both direct static files and external frontends)
-app.use(cors());
+// Enable advanced CORS & Private Network Access (PNA) for seamless dev server / file:// integration
+app.use((req, res, next) => {
+    const origin = req.headers.origin || '*';
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Request-Private-Network');
+
+    // Chromium Private Network Access (PNA) preflight support
+    if (req.headers['access-control-request-private-network']) {
+        res.setHeader('Access-Control-Allow-Private-Network', 'true');
+    }
+
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(204);
+    }
+    next();
+});
+
+app.use(cors({
+    origin: (origin, callback) => callback(null, true),
+    credentials: true
+}));
+
+// Request logger for API calls
+app.use((req, res, next) => {
+    if (req.url.startsWith('/api')) {
+        console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.url} (Origin: ${req.headers.origin || 'same-origin'})`);
+    }
+    next();
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -85,10 +115,11 @@ app.use((err, req, res, next) => {
 
 // Initialize DB schema & seeds, then start server
 initDatabase().then(() => {
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
         console.log(`=================================================`);
         console.log(`🎓 PlacementHub Advanced Backend Server is running!`);
         console.log(`🌐 Local URL:  http://localhost:${PORT}`);
+        console.log(`🌐 IPv4 URL:   http://127.0.0.1:${PORT}`);
         console.log(`📡 API URL:    http://localhost:${PORT}/api/health`);
         console.log(`=================================================`);
     });

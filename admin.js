@@ -538,16 +538,21 @@ async function loadVisitingDrives() {
     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Loading scheduled drives...</td></tr>`;
 
     try {
-        let res = await fetch(`${API_BASE}/companies/visiting`, { headers: getAuthHeaders() });
-        let data = await res.json();
-        if (!data.success) {
-            res = await fetch(`${API_BASE}/jobs`, { headers: getAuthHeaders() });
-            data = await res.json();
+        let list = [];
+        if (typeof fetchVisitingPlacementDrives === 'function') {
+            const res = await fetchVisitingPlacementDrives();
+            list = res.drives || [];
+        } else {
+            let res = await fetch(`${API_BASE}/companies/visiting`, { headers: getAuthHeaders() });
+            let data = await res.json();
+            if (!data.success) {
+                res = await fetch(`${API_BASE}/jobs`, { headers: getAuthHeaders() });
+                data = await res.json();
+            }
+            list = data.companies || data.visitingCompanies || data.jobs || [];
         }
 
-        const list = data.companies || data.visitingCompanies || data.jobs || [];
-
-        if (data.success && Array.isArray(list)) {
+        if (Array.isArray(list)) {
             allVisitingDrives = list;
 
             if (list.length === 0) {

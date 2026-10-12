@@ -650,16 +650,19 @@ async function loadHomeVisitingCompanies() {
     `;
 
     try {
-        const res = await fetch(`${API_BASE}/companies/visiting`);
-        let data = await res.json();
-        if (!data.success) {
-            const fallbackRes = await fetch(`${API_BASE}/jobs`);
-            data = await fallbackRes.json();
+        let drives = [];
+        if (typeof fetchVisitingPlacementDrives === 'function') {
+            const result = await fetchVisitingPlacementDrives();
+            drives = result.drives || [];
+        } else {
+            const res = await fetch(`${API_BASE}/companies/visiting`);
+            if (res.ok) {
+                const data = await res.json();
+                drives = data.companies || data.visitingCompanies || data.jobs || [];
+            }
         }
 
-        const drives = (data.companies || data.visitingCompanies || data.jobs || []);
-
-        if (data.success && Array.isArray(drives) && drives.length > 0) {
+        if (Array.isArray(drives) && drives.length > 0) {
             const jobs = drives;
 
             // Update Spotlight Card with the first visiting drive

@@ -219,19 +219,31 @@ async function loadVisitingCompanies() {
     }
 
     try {
-        const [profile, jobsRes] = await Promise.all([
-            getOrFetchStudentProfile(),
-            fetch(`${API_BASE}/companies/visiting`, { headers: getAuthHeaders() })
-                .then(r => r.json())
-                .catch(async () => {
-                    const fallback = await fetch(`${API_BASE}/jobs`, { headers: getAuthHeaders() });
-                    return fallback.json();
-                })
-        ]);
+        const profile = await getOrFetchStudentProfile();
+        let driveList = [];
+        if (typeof fetchVisitingPlacementDrives === 'function') {
+            try {
+                const drivesRes = await fetchVisitingPlacementDrives();
+                driveList = drivesRes.drives || [];
+            } catch (e) {
+                console.warn("fetchVisitingPlacementDrives fallback:", e);
+            }
+        }
+        if (!driveList || driveList.length === 0) {
+            try {
+                const jobsRes = await fetch(`${API_BASE}/companies/visiting`, { headers: getAuthHeaders() })
+                    .then(r => r.json())
+                    .catch(async () => {
+                        const fallback = await fetch(`${API_BASE}/jobs`, { headers: getAuthHeaders() });
+                        return fallback.json();
+                    });
+                driveList = jobsRes.companies || jobsRes.visitingCompanies || jobsRes.jobs || [];
+            } catch (e) {
+                // ignore
+            }
+        }
 
-        const driveList = jobsRes.companies || jobsRes.visitingCompanies || jobsRes.jobs || [];
-
-        if (jobsRes.success && Array.isArray(driveList)) {
+        if (Array.isArray(driveList)) {
             allStudentVisitingDrives = driveList;
 
             if (badgeEl) {

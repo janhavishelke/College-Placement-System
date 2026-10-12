@@ -3,13 +3,93 @@
 
 function getPlacementApiBase() {
     if (typeof window !== 'undefined' && window.location) {
-        if (window.location.protocol === 'file:') return 'http://localhost:5000/api';
-        if (window.location.port && window.location.port !== '5000') return 'http://localhost:5000/api';
+        const protocol = window.location.protocol;
+        const hostname = window.location.hostname || 'localhost';
+        const port = window.location.port;
+
+        // If running directly as a local file (file://)
+        if (protocol === 'file:') {
+            return 'http://127.0.0.1:5000/api';
+        }
+
+        // If served from backend server on port 5000
+        if (port === '5000') {
+            return '/api';
+        }
+
+        // If served from a frontend dev server (e.g. Live Server on port 5500, 3000, 8080)
+        return `http://${hostname}:5000/api`;
     }
-    return '/api';
+    return 'http://127.0.0.1:5000/api';
 }
 window.PLACEMENT_API_BASE = getPlacementApiBase();
 const API_ROOT = window.PLACEMENT_API_BASE;
+
+// Universal robust fetch for visiting placement drives with multi-host fallbacks
+async function fetchVisitingPlacementDrives() {
+    const isFile = typeof window !== 'undefined' && window.location && window.location.protocol === 'file:';
+    const hostname = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : 'localhost';
+    const port = typeof window !== 'undefined' && window.location ? window.location.port : '';
+
+    const candidates = [];
+
+    // Same-origin relative paths if served on port 5000
+    if (!isFile && port === '5000') {
+        candidates.push('/api/companies/visiting');
+        candidates.push('/api/companies');
+        candidates.push('/api/jobs');
+    }
+
+    // Current hostname on port 5000
+    if (hostname) {
+        candidates.push(`http://${hostname}:5000/api/companies/visiting`);
+        candidates.push(`http://${hostname}:5000/api/companies`);
+        candidates.push(`http://${hostname}:5000/api/jobs`);
+    }
+
+    // 127.0.0.1 and localhost explicit fallbacks
+    candidates.push('http://127.0.0.1:5000/api/companies/visiting');
+    candidates.push('http://127.0.0.1:5000/api/companies');
+    candidates.push('http://127.0.0.1:5000/api/jobs');
+    candidates.push('http://localhost:5000/api/companies/visiting');
+    candidates.push('http://localhost:5000/api/companies');
+    candidates.push('http://localhost:5000/api/jobs');
+    candidates.push('/api/companies/visiting');
+    candidates.push('/api/companies');
+    candidates.push('/api/jobs');
+
+    const uniqueCandidates = [...new Set(candidates)];
+    const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null;
+    const headers = { 'Accept': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    let lastError = null;
+    for (const url of uniqueCandidates) {
+        try {
+            const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+            const timer = controller ? setTimeout(() => controller.abort(), 4000) : null;
+            const res = await fetch(url, {
+                method: 'GET',
+                headers,
+                signal: controller ? controller.signal : undefined
+            });
+            if (timer) clearTimeout(timer);
+
+            if (!res.ok) continue;
+            const contentType = res.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) continue;
+
+            const data = await res.json();
+            const list = data.companies || data.visitingCompanies || data.jobs;
+            if (data.success && Array.isArray(list)) {
+                return { success: true, drives: list, sourceUrl: url };
+            }
+        } catch (e) {
+            lastError = e;
+        }
+    }
+    throw lastError || new Error('Unable to connect to placement server.');
+}
 
 // --- THEME MANAGEMENT ---
 function initTheme() {
@@ -264,8 +344,8 @@ function closeModal(id) {
 }
 
 function escapeHtml(str) {
-    if (!str) return '';
-    return str.toString().replace(/[&<>"']/g, function (m) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/[&<>"']/g, function (m) {
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
     });
 }
@@ -339,16 +419,46 @@ async function openCompanyDetailsModal(companyIdOrJobId) {
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
     try {
-        const base = window.PLACEMENT_API_BASE || getPlacementApiBase();
-        // Try /api/companies/:id first, fallback to /api/jobs/:id
-        let res = await fetch(`${base}/companies/${companyIdOrJobId}`, { headers });
-        let data = await res.json();
-        if (!data.success) {
-            res = await fetch(`${base}/jobs/${companyIdOrJobId}`, { headers });
-            data = await res.json();
+        const isFile = typeof window !== 'undefined' && window.location && window.location.protocol === 'file:';
+        const hostname = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : 'localhost';
+        const port = typeof window !== 'undefined' && window.location ? window.location.port : '';
+
+        const candidates = [];
+        if (!isFile && port === '5000') {
+            candidates.push(`/api/companies/${companyIdOrJobId}`);
+            candidates.push(`/api/jobs/${companyIdOrJobId}`);
+        }
+        if (hostname) {
+            candidates.push(`http://${hostname}:5000/api/companies/${companyIdOrJobId}`);
+            candidates.push(`http://${hostname}:5000/api/jobs/${companyIdOrJobId}`);
+        }
+        candidates.push(`http://127.0.0.1:5000/api/companies/${companyIdOrJobId}`);
+        candidates.push(`http://127.0.0.1:5000/api/jobs/${companyIdOrJobId}`);
+        candidates.push(`http://localhost:5000/api/companies/${companyIdOrJobId}`);
+        candidates.push(`http://localhost:5000/api/jobs/${companyIdOrJobId}`);
+        candidates.push(`/api/companies/${companyIdOrJobId}`);
+        candidates.push(`/api/jobs/${companyIdOrJobId}`);
+
+        const uniqueCandidates = [...new Set(candidates)];
+        let data = null;
+
+        for (const url of uniqueCandidates) {
+            try {
+                const res = await fetch(url, { headers });
+                if (!res.ok) continue;
+                const ct = res.headers.get('content-type') || '';
+                if (!ct.includes('application/json')) continue;
+                const json = await res.json();
+                if (json.success && (json.company || json.job)) {
+                    data = json;
+                    break;
+                }
+            } catch (e) {
+                // try next
+            }
         }
 
-        if (!data.success || (!data.company && !data.job)) {
+        if (!data || !data.success || (!data.company && !data.job)) {
             content.innerHTML = `
                 <div style="text-align:center; padding:30px 10px;">
                     <div style="font-size:36px; margin-bottom:10px;">⚠️</div>

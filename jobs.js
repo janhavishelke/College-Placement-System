@@ -35,16 +35,21 @@ function updateNavbar() {
 async function loadJobs() {
     container.innerHTML = `<div class="skeleton" style="height: 250px;"></div><div class="skeleton" style="height: 250px;"></div>`;
     try {
-        let res = await fetch(`${API_BASE}/companies/visiting`, { headers: getAuthHeaders() });
-        let data = await res.json();
-        if (!data.success) {
-            res = await fetch(`${API_BASE}/jobs`, { headers: getAuthHeaders() });
-            data = await res.json();
+        let list = [];
+        if (typeof fetchVisitingPlacementDrives === 'function') {
+            const res = await fetchVisitingPlacementDrives();
+            list = res.drives || [];
+        } else {
+            let res = await fetch(`${API_BASE}/companies/visiting`, { headers: getAuthHeaders() });
+            let data = await res.json();
+            if (!data.success) {
+                res = await fetch(`${API_BASE}/jobs`, { headers: getAuthHeaders() });
+                data = await res.json();
+            }
+            list = data.companies || data.visitingCompanies || data.jobs || [];
         }
 
-        const list = data.companies || data.visitingCompanies || data.jobs || [];
-
-        if (data.success && Array.isArray(list)) {
+        if (Array.isArray(list) && list.length > 0) {
             allJobs = list;
             displayJobs(allJobs);
         } else {
