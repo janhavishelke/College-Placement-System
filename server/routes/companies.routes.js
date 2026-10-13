@@ -8,9 +8,9 @@ router.get('/', optionalAuthenticate, companiesController.getVisitingCompanies);
 router.get('/visiting', optionalAuthenticate, companiesController.getVisitingCompanies);
 router.get('/:id', optionalAuthenticate, companiesController.getCompanyById);
 
-// Admin & Company CRUD operations
-router.post('/', authenticateToken, authorizeRoles('COMPANY', 'ADMIN'), companiesController.createCompanyDrive);
-router.put('/:id', authenticateToken, authorizeRoles('COMPANY', 'ADMIN'), companiesController.updateCompanyDrive);
-router.delete('/:id', authenticateToken, authorizeRoles('COMPANY', 'ADMIN'), companiesController.deleteCompanyDrive);
+// Admin, Placement Head, Coordinator & Company CRUD operations
+router.post('/', authenticateToken, authorizeRoles('COMPANY', 'ADMIN', 'PLACEMENT_HEAD', 'COORDINATOR'), companiesController.createCompanyDrive);
+router.put('/:id', authenticateToken, authorizeRoles('COMPANY', 'ADMIN', 'PLACEMENT_HEAD', 'COORDINATOR'), companiesController.updateCompanyDrive);
+router.delete('/:id', authenticateToken, authorizeRoles('COMPANY', 'ADMIN', 'PLACEMENT_HEAD'), companiesController.deleteCompanyDrive);
 
 module.exports = router;

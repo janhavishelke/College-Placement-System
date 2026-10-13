@@ -11,32 +11,48 @@
 
 <header class="dashboard-navbar">
     <div class="logo">
-        🎓 PlacementHub <span style="font-size:12px; background:rgba(255,255,255,0.15); padding:2px 8px; border-radius:4px; font-weight:normal; margin-left:6px;">Admin Portal</span>
+        🎓 PlacementHub <span style="font-size:12px; background:rgba(255,255,255,0.15); padding:2px 8px; border-radius:4px; font-weight:normal; margin-left:6px;">Placement Head & TPO Portal</span>
     </div>
     <div class="nav-actions">
         <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
-        <span id="adminName" style="font-weight: 600; font-size: 14px;">Administrator</span>
+        <span id="adminName" style="font-weight: 600; font-size: 14px;">Dr. Rajesh Verma (TPO)</span>
         <button onclick="logout()" class="logout-button">Logout</button>
     </div>
 </header>
 
 <div class="dashboard">
     <aside class="sidebar">
-        <div class="sidebar-title">Management</div>
+        <div class="sidebar-title">Leadership & Governance</div>
         <button class="tab-link active" onclick="switchAdminTab('analyticsTab', this)">
             <span>📈</span> Institutional Analytics
         </button>
+        <button class="tab-link" onclick="switchAdminTab('approvalsTab', this)">
+            <span>✅</span> Approval Queue <span id="pendingApprovalBadge" class="badge badge-warning" style="margin-left:6px; font-size:11px; padding:1px 6px; display:none;">0</span>
+        </button>
+        <button class="tab-link" onclick="switchAdminTab('coordinatorsTab', this)">
+            <span>🤝</span> Placement Coordinators
+        </button>
+        <button class="tab-link" onclick="switchAdminTab('drivesTab', this)">
+            <span>🏢</span> Recruitment Drives & Visits
+        </button>
+        <button class="tab-link" onclick="switchAdminTab('applicationsTab', this)">
+            <span>📋</span> Applications & Offers
+        </button>
+        <button class="tab-link" onclick="switchAdminTab('reportsTab', this)">
+            <span>📊</span> Reports & Data Export
+        </button>
+        <button class="tab-link" onclick="switchAdminTab('announcementsTab', this)">
+            <span>📢</span> Campus Announcements
+        </button>
+        <button class="tab-link" onclick="switchAdminTab('auditTab', this)">
+            <span>🛡️</span> Administrative Audit Trail
+        </button>
+        <div class="sidebar-title" style="margin-top:14px;">Campus Life & Schedules</div>
         <button class="tab-link" onclick="switchAdminTab('adminCalendarTab', this)">
             <span>📅</span> Drive Calendar & Visits
         </button>
-        <button class="tab-link" onclick="switchAdminTab('drivesTab', this)">
-            <span>🏢</span> Announce Visiting Company
-        </button>
-        <button class="tab-link" onclick="switchAdminTab('applicationsTab', this)">
-            <span>📋</span> Manage Applications
-        </button>
         <button class="tab-link" onclick="switchAdminTab('moderationTab', this)">
-            <span>🛡️</span> Alumni Moderation
+            <span>💬</span> Alumni Moderation
         </button>
         <div class="sidebar-title" style="margin-top:14px;">External Views</div>
         <a href="jobs.html"><span>💼</span> View Public Drives</a>
@@ -351,6 +367,27 @@
                         </div>
                     </div>
 
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                        <div>
+                            <label for="driveCoordinator">🤝 Assign Department Coordinator</label>
+                            <select id="driveCoordinator">
+                                <option value="">-- Direct TPO Oversight / None --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="driveIndustry">🏭 Industry Domain</label>
+                            <input type="text" id="driveIndustry" value="Information Technology" placeholder="e.g. Fintech, E-Commerce, Consulting">
+                        </div>
+                        <div>
+                            <label for="drivePositions">👥 Available Openings</label>
+                            <input type="number" id="drivePositions" value="25" min="1">
+                        </div>
+                        <div>
+                            <label for="driveGradYear">🎓 Target Batch Year</label>
+                            <input type="number" id="driveGradYear" value="2026">
+                        </div>
+                    </div>
+
                     <div style="display: grid; grid-template-columns: 1fr; gap: 16px;">
                         <div>
                             <label for="driveBranches">🎓 Eligible Engineering Branches (comma-separated)</label>
@@ -380,7 +417,7 @@
                 <div class="dashboard-header" style="margin-bottom: 14px;">
                     <div>
                         <h3>Scheduled Campus Recruitment Drives</h3>
-                        <p style="font-size: 13px; color: var(--text-muted);">All visiting companies and student registration counts.</p>
+                        <p style="font-size: 13px; color: var(--text-muted);">Manage approved campus recruitment visits, assign departmental coordinators, or archive completed drives.</p>
                     </div>
                 </div>
 
@@ -391,9 +428,9 @@
                                 <th>Visiting Company</th>
                                 <th>Role</th>
                                 <th>🗓️ Campus Visit Date</th>
-                                <th>⏳ Apply Deadline</th>
                                 <th>Package (CTC)</th>
-                                <th>Eligibility Criteria</th>
+                                <th>Assigned Coordinator</th>
+                                <th>Status</th>
                                 <th>Registered Students</th>
                                 <th>Actions</th>
                             </tr>
@@ -406,7 +443,364 @@
             </div>
         </section>
 
+        <!-- ==========================================
+             ADMIN TAB: APPROVAL WORKFLOW QUEUE
+             ========================================== -->
+        <section id="approvalsTab" class="dashboard-tab-panel" style="display:none;">
+            <div class="dashboard-header">
+                <div>
+                    <h1>Drive Submissions & Approval Queue</h1>
+                    <p>Review campus recruitment drives submitted by Placement Coordinators or partner companies. Approve to publish to student portal or request revisions.</p>
+                </div>
+                <button onclick="loadApprovalQueue()" class="btn btn-secondary">🔄 Refresh Queue</button>
+            </div>
+
+            <div class="readiness-card" style="margin-bottom:0;">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Company & Role</th>
+                                <th>Coordinator / Submitter</th>
+                                <th>CTC Package</th>
+                                <th>Campus Visit Date</th>
+                                <th>Cutoff & Skills</th>
+                                <th>Workflow Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="approvalsTable">
+                            <tr><td colspan="7" style="text-align:center;">Loading approval queue...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             ADMIN TAB: COORDINATOR MANAGEMENT
+             ========================================== -->
+        <section id="coordinatorsTab" class="dashboard-tab-panel" style="display:none;">
+            <div class="dashboard-header">
+                <div>
+                    <h1>Departmental Placement Coordinators</h1>
+                    <p>Manage faculty coordinators, assign drive management responsibilities, and monitor departmental coordination workloads.</p>
+                </div>
+                <button onclick="toggleAddCoordinatorForm(true)" class="btn btn-primary">➕ Add Coordinator</button>
+            </div>
+
+            <!-- Add Coordinator Modal / Form Card -->
+            <div id="addCoordinatorCard" class="readiness-card" style="display:none; margin-bottom: 24px; border: 2px solid var(--primary);">
+                <div class="dashboard-header" style="margin-bottom: 12px;">
+                    <div>
+                        <h3>➕ Register New Placement Coordinator</h3>
+                        <p style="font-size:12px; color:var(--text-muted);">Creates an authorized faculty coordinator account with drive submission and round management privileges.</p>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="toggleAddCoordinatorForm(false)">✕ Close</button>
+                </div>
+                <form id="createCoordinatorForm" onsubmit="handleCreateCoordinator(event)">
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+                        <div>
+                            <label>Coordinator Name *</label>
+                            <input type="text" id="coordName" required placeholder="e.g. Prof. Anand Joshi">
+                        </div>
+                        <div>
+                            <label>Official Email *</label>
+                            <input type="email" id="coordEmail" required placeholder="e.g. anand.joshi@placement.edu">
+                        </div>
+                        <div>
+                            <label>Initial Password *</label>
+                            <input type="password" id="coordPass" required placeholder="Minimum 6 characters" minlength="6">
+                        </div>
+                        <div>
+                            <label>Academic Department *</label>
+                            <select id="coordDept" required>
+                                <option value="Computer Engineering">Computer Engineering</option>
+                                <option value="Information Technology">Information Technology</option>
+                                <option value="Electronics & Telecom">Electronics & Telecom</option>
+                                <option value="Mechanical Engineering">Mechanical Engineering</option>
+                                <option value="Civil Engineering">Civil Engineering</option>
+                                <option value="AI & Data Science">AI & Data Science</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Phone / Extension</label>
+                            <input type="text" id="coordPhone" placeholder="e.g. +91 98765 43210">
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:14px;">
+                        <button type="button" class="btn btn-secondary" onclick="toggleAddCoordinatorForm(false)">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save & Grant Access</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Coordinators Table -->
+            <div class="readiness-card" style="margin-bottom:0;">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Coordinator</th>
+                                <th>Email</th>
+                                <th>Department</th>
+                                <th>Contact</th>
+                                <th>Assigned Drives</th>
+                                <th>Account Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="coordinatorsTable">
+                            <tr><td colspan="7" style="text-align:center;">Loading coordinators...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             ADMIN TAB: REPORTS & DATA EXPORT
+             ========================================== -->
+        <section id="reportsTab" class="dashboard-tab-panel" style="display:none;">
+            <div class="dashboard-header">
+                <div>
+                    <h1>Institutional Placement Reports & Data Export</h1>
+                    <p>Generate certified placement audit reports and export complete datasets in Excel / CSV format.</p>
+                </div>
+                <button onclick="loadReportsData()" class="btn btn-secondary">🔄 Refresh Metrics</button>
+            </div>
+
+            <!-- Instant CSV Downloads Grid -->
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin-bottom: 24px;">
+                <div class="stat-card" style="display:flex; flex-direction:column; justify-content:space-between;">
+                    <div>
+                        <div class="stat-card-header">
+                            <h3>Students Master Database</h3>
+                            <span class="stat-icon">🎓</span>
+                        </div>
+                        <p style="font-size:12.5px; color:var(--text-secondary); margin: 8px 0 16px 0;">
+                            Export full student roster including CGPA, active backlogs, branches, and placement statuses.
+                        </p>
+                    </div>
+                    <button onclick="triggerCsvExport('students')" class="btn btn-primary" style="width:100%;">
+                        📥 Export Students CSV
+                    </button>
+                </div>
+
+                <div class="stat-card" style="display:flex; flex-direction:column; justify-content:space-between;">
+                    <div>
+                        <div class="stat-card-header">
+                            <h3>Campus Drives Registry</h3>
+                            <span class="stat-icon">🏢</span>
+                        </div>
+                        <p style="font-size:12.5px; color:var(--text-secondary); margin: 8px 0 16px 0;">
+                            Export all visiting companies, CTC packages, criteria cutoffs, coordinators, and schedules.
+                        </p>
+                    </div>
+                    <button onclick="triggerCsvExport('drives')" class="btn btn-primary" style="width:100%;">
+                        📥 Export Drives CSV
+                    </button>
+                </div>
+
+                <div class="stat-card" style="display:flex; flex-direction:column; justify-content:space-between;">
+                    <div>
+                        <div class="stat-card-header">
+                            <h3>Final Offers & Selections</h3>
+                            <span class="stat-icon">🎯</span>
+                        </div>
+                        <p style="font-size:12.5px; color:var(--text-secondary); margin: 8px 0 16px 0;">
+                            Export verified hired candidates, hiring company names, job titles, and compensation packages.
+                        </p>
+                    </div>
+                    <button onclick="triggerCsvExport('selections')" class="btn btn-primary" style="width:100%;">
+                        📥 Export Selections CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- Summary Report Tables Grid -->
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 24px;">
+                <div class="readiness-card" style="margin-bottom:0;">
+                    <h3>Department-Wise Placement Summary</h3>
+                    <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Aggregated statistics across all academic branches</p>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Department</th>
+                                    <th>Enrolled</th>
+                                    <th>Placed</th>
+                                    <th>Offers</th>
+                                    <th>Avg CTC</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportDeptTable">
+                                <tr><td colspan="5" style="text-align:center;">Loading department report...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="readiness-card" style="margin-bottom:0;">
+                    <h3>Top Recruiting Partners</h3>
+                    <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Hiring volume and package benchmark by corporate partner</p>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Company</th>
+                                    <th>Applications</th>
+                                    <th>Offers Given</th>
+                                    <th>Top CTC</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportCompanyTable">
+                                <tr><td colspan="4" style="text-align:center;">Loading recruiter report...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             ADMIN TAB: CAMPUS ANNOUNCEMENTS
+             ========================================== -->
+        <section id="announcementsTab" class="dashboard-tab-panel" style="display:none;">
+            <div class="dashboard-header">
+                <div>
+                    <h1>Campus Recruitment Announcements & Broadcasts</h1>
+                    <p>Broadcast official notifications to students, placement coordinators, or all stakeholders.</p>
+                </div>
+                <button onclick="loadAdminAnnouncements()" class="btn btn-secondary">🔄 Refresh</button>
+            </div>
+
+            <!-- Broadcast Form Card -->
+            <div class="readiness-card" style="margin-bottom: 24px;">
+                <h3 style="margin-bottom:12px;">📢 Broadcast New Announcement</h3>
+                <form id="createAnnouncementForm" onsubmit="handleCreateAnnouncement(event)">
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
+                        <div>
+                            <label>Announcement Title *</label>
+                            <input type="text" id="annTitle" required placeholder="e.g. Microsoft Pre-Placement Talk Venue Change">
+                        </div>
+                        <div>
+                            <label>Target Audience *</label>
+                            <select id="annTarget" required>
+                                <option value="ALL">Everyone (Campus-Wide)</option>
+                                <option value="STUDENT">Students Only</option>
+                                <option value="COORDINATOR">Coordinators Only</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Category *</label>
+                            <select id="annCategory" required>
+                                <option value="DRIVE">🏢 Campus Drive</option>
+                                <option value="TEST">📝 Online Assessment</option>
+                                <option value="INTERVIEW">🎤 Interview Schedule</option>
+                                <option value="POLICY">📋 Placement Policy</option>
+                                <option value="GENERAL">📢 General Notice</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Urgency Priority</label>
+                            <select id="annPriority">
+                                <option value="NORMAL">Normal</option>
+                                <option value="HIGH">High Priority</option>
+                                <option value="CRITICAL">Critical Alert</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="margin-top:14px;">
+                        <label>Message Content *</label>
+                        <textarea id="annMessage" rows="3" required placeholder="Write the complete broadcast message here..."></textarea>
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; margin-top:12px;">
+                        <button type="submit" class="btn btn-primary">🚀 Broadcast Announcement</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Published Announcements List -->
+            <div class="readiness-card" style="margin-bottom:0;">
+                <h3 style="margin-bottom:12px;">Active Published Announcements</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Audience</th>
+                                <th>Category</th>
+                                <th>Title & Content</th>
+                                <th>Urgency</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="announcementsTable">
+                            <tr><td colspan="6" style="text-align:center;">Loading announcements...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             ADMIN TAB: ADMINISTRATIVE AUDIT TRAIL
+             ========================================== -->
+        <section id="auditTab" class="dashboard-tab-panel" style="display:none;">
+            <div class="dashboard-header">
+                <div>
+                    <h1>Administrative Audit Trail & Activity Logs</h1>
+                    <p>Immutable system audit trail tracking all governance actions, approvals, coordinator assignments, and stage transitions.</p>
+                </div>
+                <button onclick="loadAdminAuditLogs()" class="btn btn-secondary">🔄 Refresh Logs</button>
+            </div>
+
+            <div class="readiness-card" style="margin-bottom:0;">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Operator / User</th>
+                                <th>Role</th>
+                                <th>Action Performed</th>
+                                <th>Target Entity</th>
+                                <th>Activity Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditLogsTable">
+                            <tr><td colspan="6" style="text-align:center;">Loading audit trail...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
     </main>
+</div>
+
+<!-- Assign Coordinator Modal -->
+<div id="assignCoordModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.55); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:var(--bg-card); border-radius:var(--radius-md); padding:28px; width:90%; max-width:480px; box-shadow:var(--shadow-lg); border:1px solid var(--border-color);">
+        <h3 style="margin-bottom:6px;">🤝 Assign Placement Coordinator</h3>
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Select the faculty coordinator responsible for managing this recruitment drive.</p>
+        <input type="hidden" id="modalAssignDriveId">
+        <div style="margin-bottom:12px;">
+            <label style="font-size:12px; color:var(--text-secondary);">Selected Drive</label>
+            <div id="modalAssignDriveTitle" style="font-weight:600; font-size:14px; margin-top:2px;">-</div>
+        </div>
+        <div style="margin-bottom:18px;">
+            <label for="modalAssignCoordSelect">Department Placement Coordinator</label>
+            <select id="modalAssignCoordSelect" required style="width:100%;">
+                <option value="">Select Coordinator...</option>
+            </select>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button class="btn btn-secondary" onclick="closeAssignCoordModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="submitCoordinatorAssignment()">Confirm Assignment</button>
+        </div>
+    </div>
 </div>
 
 <script src="common.js"></script>

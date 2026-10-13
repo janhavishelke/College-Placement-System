@@ -14,12 +14,12 @@ exports.register = async (req, res) => {
             });
         }
 
-        const validRoles = ['STUDENT', 'COMPANY', 'ADMIN'];
+        const validRoles = ['STUDENT', 'COMPANY', 'ADMIN', 'PLACEMENT_HEAD', 'COORDINATOR'];
         const normalizedRole = role.toUpperCase();
         if (!validRoles.includes(normalizedRole)) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid role. Must be STUDENT, COMPANY, or ADMIN.'
+                message: 'Invalid role. Must be STUDENT, COMPANY, COORDINATOR, PLACEMENT_HEAD, or ADMIN.'
             });
         }
 
@@ -41,8 +41,8 @@ exports.register = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
         const result = await run(
-            'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
-            [name.trim(), email.trim().toLowerCase(), hashedPassword, normalizedRole]
+            'INSERT INTO users (name, email, password, role, department, phone) VALUES (?, ?, ?, ?, ?, ?)',
+            [name.trim(), email.trim().toLowerCase(), hashedPassword, normalizedRole, req.body.department || '', req.body.phone || '']
         );
 
         return res.status(201).json({
@@ -93,7 +93,12 @@ exports.login = async (req, res) => {
             });
         }
 
-        if (user.role !== normalizedRole) {
+        // Normalize role matching: ADMIN and PLACEMENT_HEAD can authenticate interchangeably
+        const isRoleMatch = user.role === normalizedRole ||
+            (normalizedRole === 'ADMIN' && user.role === 'PLACEMENT_HEAD') ||
+            (normalizedRole === 'PLACEMENT_HEAD' && user.role === 'ADMIN');
+
+        if (!isRoleMatch) {
             return res.status(403).json({
                 success: false,
                 message: `Account found, but role does not match. This email is registered as ${user.role}.`
@@ -105,7 +110,9 @@ exports.login = async (req, res) => {
             id: user.id,
             email: user.email,
             name: user.name,
-            role: user.role
+            role: user.role,
+            department: user.department || user.branch || '',
+            phone: user.phone || ''
         };
 
         const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
@@ -127,7 +134,7 @@ exports.login = async (req, res) => {
 
 exports.me = async (req, res) => {
     try {
-        const user = await get('SELECT id, name, email, role, branch, cgpa, skills, created_at FROM users WHERE id = ?', [req.user.id]);
+        const user = await get('SELECT id, name, email, role, branch, cgpa, skills, department, phone, status, created_at FROM users WHERE id = ?', [req.user.id]);
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found.' });
         }

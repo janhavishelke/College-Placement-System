@@ -21,6 +21,12 @@ const offersRoutes = require('./routes/offers.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
 const assistantRoutes = require('./routes/assistant.routes');
 
+// Placement Head & Coordinator Management routes
+const coordinatorsRoutes = require('./routes/coordinators.routes');
+const announcementsRoutes = require('./routes/announcements.routes');
+const reportsRoutes = require('./routes/reports.routes');
+const auditRoutes = require('./routes/audit.routes');
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -86,6 +92,12 @@ app.use('/api/alumni', alumniRoutes);
 app.use('/api/offers', offersRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/assistant', assistantRoutes);
+
+// Institutional & Coordinator API Routes
+app.use('/api/coordinators', coordinatorsRoutes);
+app.use('/api/announcements', announcementsRoutes);
+app.use('/api/reports', reportsRoutes);
+app.use('/api/audit-logs', auditRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

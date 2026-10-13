@@ -9,11 +9,12 @@ router.post('/', authenticateToken, authorizeRoles('STUDENT'), applicationsContr
 // Student gets their own applications
 router.get('/student', authenticateToken, authorizeRoles('STUDENT'), applicationsController.getStudentApplications);
 
-// Company gets applications for their jobs (or Admin gets all)
-router.get('/company', authenticateToken, authorizeRoles('COMPANY', 'ADMIN'), applicationsController.getCompanyApplications);
+// Company, Coordinator, Placement Head, Admin gets applications
+router.get('/company', authenticateToken, authorizeRoles('COMPANY', 'ADMIN', 'PLACEMENT_HEAD', 'COORDINATOR'), applicationsController.getCompanyApplications);
 
-// Company or Admin updates application status (All 8 stages)
-router.patch('/:id/status', authenticateToken, authorizeRoles('COMPANY', 'ADMIN'), applicationsController.updateApplicationStatus);
+// Company, Coordinator, Placement Head, Admin updates application status (All 8 stages)
+router.patch('/:id/status', authenticateToken, authorizeRoles('COMPANY', 'ADMIN', 'PLACEMENT_HEAD', 'COORDINATOR'), applicationsController.updateApplicationStatus);
+router.put('/:id/status', authenticateToken, authorizeRoles('COMPANY', 'ADMIN', 'PLACEMENT_HEAD', 'COORDINATOR'), applicationsController.updateApplicationStatus);
 
 // Student accepts or declines a received job offer (only when Selected)
 router.patch('/:id/respond-offer', authenticateToken, authorizeRoles('STUDENT'), applicationsController.respondToOffer);

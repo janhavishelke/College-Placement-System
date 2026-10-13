@@ -4,12 +4,12 @@ const token = localStorage.getItem("token");
 const role = localStorage.getItem("userRole");
 
 // Route protection
-if (!token || role !== "ADMIN") {
-    alert("Please log in as an administrator to access this dashboard.");
+if (!token || (role !== "ADMIN" && role !== "PLACEMENT_HEAD")) {
+    alert("Please log in as a Placement Head or Administrator to access this dashboard.");
     window.location.href = "login.html";
 }
 
-const adminName = localStorage.getItem("userName") || "Administrator";
+const adminName = localStorage.getItem("userName") || (role === "PLACEMENT_HEAD" ? "Dr. Rajesh Verma (TPO)" : "Administrator");
 const nameEl = document.getElementById("adminName");
 if (nameEl) nameEl.innerText = adminName;
 
@@ -37,9 +37,14 @@ function switchAdminTab(tabId, btn) {
     if (btn) btn.classList.add('active');
 
     if (tabId === 'analyticsTab') loadAnalyticsDashboard();
-    else if (tabId === 'adminCalendarTab') loadAdminCalendar();
-    else if (tabId === 'drivesTab') loadVisitingDrives();
+    else if (tabId === 'approvalsTab') loadApprovalQueue();
+    else if (tabId === 'coordinatorsTab') loadCoordinatorsList();
+    else if (tabId === 'drivesTab') { loadVisitingDrives(); loadCoordinatorsDropdown(); }
     else if (tabId === 'applicationsTab') loadApplicationsTable();
+    else if (tabId === 'reportsTab') loadReportsData();
+    else if (tabId === 'announcementsTab') loadAdminAnnouncements();
+    else if (tabId === 'auditTab') loadAdminAuditLogs();
+    else if (tabId === 'adminCalendarTab') loadAdminCalendar();
     else if (tabId === 'moderationTab') loadModerationQueue();
 }
 
@@ -530,6 +535,47 @@ async function moderateSubmission(expId, action) {
 // ============================================================
 
 let allVisitingDrives = [];
+let allCoordinatorsList = [];
+
+async function checkPendingApprovalsBadge() {
+    try {
+        const res = await fetch(`${API_BASE}/jobs?all=true`, { headers: getAuthHeaders() });
+        const data = await res.json();
+        const badge = document.getElementById("pendingApprovalBadge");
+        if (data.success && data.jobs && badge) {
+            const pending = data.jobs.filter(j => j.approval_status === 'Pending Approval').length;
+            if (pending > 0) {
+                badge.innerText = pending;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    } catch (e) {
+        console.error("Error checking approval badge:", e);
+    }
+}
+
+async function loadCoordinatorsDropdown() {
+    try {
+        const res = await fetch(`${API_BASE}/coordinators`, { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (data.success && data.coordinators) {
+            allCoordinatorsList = data.coordinators;
+            const select = document.getElementById("driveCoordinator");
+            const modalSelect = document.getElementById("modalAssignCoordSelect");
+
+            const opts = `<option value="">-- Direct TPO Oversight / None --</option>` +
+                data.coordinators.map(c => `<option value="${c.id}" data-name="${escapeHtml(c.name)}">${escapeHtml(c.name)} (${escapeHtml(c.department || 'Coordinator')})</option>`).join('');
+
+            if (select) select.innerHTML = opts;
+            if (modalSelect) modalSelect.innerHTML = `<option value="">Select Coordinator...</option>` +
+                data.coordinators.map(c => `<option value="${c.id}" data-name="${escapeHtml(c.name)}">${escapeHtml(c.name)} (${escapeHtml(c.department || 'Coordinator')})</option>`).join('');
+        }
+    } catch (e) {
+        console.error("Error loading coordinators dropdown:", e);
+    }
+}
 
 async function loadVisitingDrives() {
     const tbody = document.getElementById("visitingDrivesTable");
@@ -538,86 +584,80 @@ async function loadVisitingDrives() {
     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Loading scheduled drives...</td></tr>`;
 
     try {
-        let list = [];
-        if (typeof fetchVisitingPlacementDrives === 'function') {
-            const res = await fetchVisitingPlacementDrives();
-            list = res.drives || [];
-        } else {
-            let res = await fetch(`${API_BASE}/companies/visiting`, { headers: getAuthHeaders() });
-            let data = await res.json();
-            if (!data.success) {
-                res = await fetch(`${API_BASE}/jobs`, { headers: getAuthHeaders() });
-                data = await res.json();
-            }
-            list = data.companies || data.visitingCompanies || data.jobs || [];
+        const res = await fetch(`${API_BASE}/jobs?all=true`, { headers: getAuthHeaders() });
+        const data = await res.json();
+        const list = (data.success && data.jobs) ? data.jobs : [];
+
+        allVisitingDrives = list;
+
+        if (list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:30px;">No campus recruitment drives scheduled yet. Use the form above to announce a visiting company.</td></tr>`;
+            return;
         }
 
-        if (Array.isArray(list)) {
-            allVisitingDrives = list;
+        tbody.innerHTML = list.map(job => {
+            const visitDisplay = job.visitDate ? `<strong>${escapeHtml(job.visitDate)}</strong>` : '<span style="color:var(--text-muted);">TBD</span>';
+            const applicantCount = job.applicantCount || 0;
+            const compName = job.company || job.company_name;
+            const coordDisplay = job.coordinator_name ? `<span class="badge badge-purple" style="font-size:11px;">🤝 ${escapeHtml(job.coordinator_name)}</span>` : '<span style="color:var(--text-muted); font-size:11px;">TPO Direct</span>';
+            const statusDisplay = job.is_archived ? `<span class="badge badge-danger">Archived</span>` :
+                job.approval_status === 'Approved' ? `<span class="badge badge-success">✓ Published</span>` :
+                job.approval_status === 'Pending Approval' ? `<span class="badge badge-warning">⏳ Pending</span>` :
+                `<span class="badge badge-secondary">${escapeHtml(job.approval_status || 'Draft')}</span>`;
 
-            if (list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:30px;">No campus recruitment drives announced yet. Use the form above to announce a visiting company.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = list.map(job => {
-                const visitDisplay = job.visitDate ? `<strong>${escapeHtml(job.visitDate)}</strong>` : '<span style="color:var(--text-muted);">TBD</span>';
-                const deadlineDisplay = job.deadline ? `<span>${escapeHtml(job.deadline)}</span>` : '<span style="color:var(--text-muted);">Open</span>';
-                const applicantCount = job.applicantCount || 0;
-                const compName = job.company || job.company_name;
-
-                return `
-                    <tr>
-                        <td>
-                            <strong>${escapeHtml(compName)}</strong><br>
-                            <span class="badge badge-primary" style="font-size:10px; margin-top:2px;">${escapeHtml(job.workMode || 'On-Campus')}</span>
-                            ${job.recruitmentStatus ? `<span class="badge badge-success" style="font-size:10px; margin-top:2px; margin-left:4px;">${escapeHtml(job.recruitmentStatus)}</span>` : ''}
-                        </td>
-                        <td>
-                            <strong>${escapeHtml(job.title)}</strong><br>
-                            <small style="color:var(--text-muted);">${escapeHtml(job.location || 'College Campus')}</small>
-                        </td>
-                        <td>
-                            <span class="badge badge-primary" style="font-size:12px;">🗓️ ${visitDisplay}</span>
-                        </td>
-                        <td>
-                            <span class="badge badge-warning" style="font-size:12px;">⏳ ${deadlineDisplay}</span>
-                        </td>
-                        <td>
-                            <strong style="color:var(--success);">${escapeHtml(job.salary || job.package)}</strong>
-                            ${job.baseSalary ? `<br><small style="color:var(--text-muted);">Base: ${escapeHtml(job.baseSalary)}</small>` : ''}
-                        </td>
-                        <td>
-                            <div style="font-size:12px;">
-                                <span>Min CGPA: <strong>${job.cgpa}</strong></span> | 
-                                <span>Backlogs: <strong>≤ ${job.maxBacklogs !== undefined ? job.maxBacklogs : 0}</strong></span><br>
-                                <small style="color:var(--text-muted);">${escapeHtml(job.eligibleBranches || job.eligible_branches)}</small>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="badge badge-primary" style="font-size:13px; font-weight:700;">
-                                👥 ${applicantCount} Applied
-                            </span>
-                        </td>
-                        <td>
-                            <div style="display:flex; flex-direction:column; gap:6px;">
-                                <button onclick="openCompanyDetailsModal(${job.id})" class="btn btn-sm btn-outline" style="font-size:11px; padding:4px 8px;">
+            return `
+                <tr>
+                    <td>
+                        <strong>${escapeHtml(compName)}</strong><br>
+                        <span class="badge badge-primary" style="font-size:10px; margin-top:2px;">${escapeHtml(job.workMode || 'On-Campus')}</span>
+                    </td>
+                    <td>
+                        <strong>${escapeHtml(job.title)}</strong><br>
+                        <small style="color:var(--text-muted);">${escapeHtml(job.location || 'College Campus')}</small>
+                    </td>
+                    <td>
+                        <span class="badge badge-primary" style="font-size:12px;">🗓️ ${visitDisplay}</span>
+                    </td>
+                    <td>
+                        <strong style="color:var(--success);">${escapeHtml(job.salary || job.package)}</strong>
+                    </td>
+                    <td>
+                        ${coordDisplay}
+                    </td>
+                    <td>
+                        ${statusDisplay}
+                    </td>
+                    <td>
+                        <span class="badge badge-primary" style="font-size:13px; font-weight:700;">
+                            👥 ${applicantCount} Applied
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <div style="display:flex; gap:4px;">
+                                <button onclick="openCompanyDetailsModal(${job.id})" class="btn btn-sm btn-outline" style="font-size:11px; padding:3px 6px;">
                                     🏢 Details
                                 </button>
-                                <button onclick="viewCompanyApplicants('${escapeHtml(compName)}')" class="btn btn-sm btn-outline" style="font-size:11px; padding:4px 8px;">
-                                    👥 Applicants (${applicantCount})
-                                </button>
-                                <button onclick="deleteDrive(${job.id}, '${escapeHtml(compName)}')" class="btn btn-sm btn-secondary" style="color:var(--danger); font-size:11px; padding:4px 8px;">
-                                    🗑️ Remove
+                                <button onclick="viewCompanyApplicants('${escapeHtml(compName)}')" class="btn btn-sm btn-outline" style="font-size:11px; padding:3px 6px;">
+                                    👥 Applicants
                                 </button>
                             </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        } else {
-            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">No drives found.</td></tr>`;
-        }
+                            <div style="display:flex; gap:4px;">
+                                <button onclick="openAssignCoordModal(${job.id}, '${escapeHtml(compName)}')" class="btn btn-sm btn-secondary" style="font-size:10px; padding:3px 6px;">
+                                    🤝 Assign Coord
+                                </button>
+                                <button onclick="archiveDrive(${job.id}, ${job.is_archived ? 0 : 1})" class="btn btn-sm btn-secondary" style="font-size:10px; padding:3px 6px; color:${job.is_archived ? 'var(--success)' : 'var(--warning)'};">
+                                    ${job.is_archived ? 'Restore' : 'Archive'}
+                                </button>
+                                <button onclick="deleteDrive(${job.id}, '${escapeHtml(compName)}')" class="btn btn-sm btn-secondary" style="color:var(--danger); font-size:10px; padding:3px 6px;">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
     } catch (err) {
         console.error("Error loading visiting drives:", err);
         tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--danger); padding:20px;">
@@ -637,7 +677,7 @@ async function handleCreateDrive(e) {
     const visitDate = document.getElementById("driveVisitDate").value.trim();
     const deadline = document.getElementById("driveDeadline").value.trim();
     const salary = document.getElementById("driveSalary").value.trim();
-    const baseSalary = document.getElementById("driveBaseSalary").value.trim();
+    const baseSalary = document.getElementById("driveBaseSalary") ? document.getElementById("driveBaseSalary").value.trim() : "";
     const minimumCgpa = parseFloat(document.getElementById("driveCgpa").value) || 0;
     const maxBacklogs = parseInt(document.getElementById("driveBacklogs").value, 10) || 0;
     const workMode = document.getElementById("driveWorkMode").value;
@@ -645,6 +685,18 @@ async function handleCreateDrive(e) {
     const eligibleBranches = document.getElementById("driveBranches").value.trim();
     const skills = document.getElementById("driveSkills").value.trim();
     const description = document.getElementById("driveDescription").value.trim();
+
+    const coordSelect = document.getElementById("driveCoordinator");
+    const coordinator_id = (coordSelect && coordSelect.value) ? parseInt(coordSelect.value, 10) : null;
+    let coordinator_name = null;
+    if (coordSelect && coordSelect.selectedIndex >= 0) {
+        const opt = coordSelect.options[coordSelect.selectedIndex];
+        coordinator_name = opt.getAttribute("data-name") || null;
+    }
+
+    const industry = document.getElementById("driveIndustry") ? document.getElementById("driveIndustry").value.trim() : "Information Technology";
+    const available_positions = document.getElementById("drivePositions") ? parseInt(document.getElementById("drivePositions").value, 10) : 25;
+    const graduation_year = document.getElementById("driveGradYear") ? parseInt(document.getElementById("driveGradYear").value, 10) : 2026;
 
     if (!companyName || !jobTitle || !visitDate || !deadline || !salary || !skills) {
         showToast("Please fill in all required fields.", "error");
@@ -670,7 +722,13 @@ async function handleCreateDrive(e) {
             location: location || "On-Campus",
             eligibleBranches: eligibleBranches || "All Branches",
             skills,
-            description
+            description,
+            approvalStatus: 'Approved',
+            coordinator_id,
+            coordinator_name,
+            industry,
+            available_positions,
+            graduation_year
         };
 
         const res = await fetch(`${API_BASE}/jobs`, {
@@ -693,9 +751,9 @@ async function handleCreateDrive(e) {
                 setTimeout(() => { alertBox.style.display = 'none'; }, 6000);
             }
             document.getElementById("announceCompanyForm").reset();
-            // Reload drives table and live analytics
             loadVisitingDrives();
             loadAnalyticsDashboard();
+            checkPendingApprovalsBadge();
         } else {
             showToast(data.message || "Failed to schedule drive.", "error");
         }
@@ -707,6 +765,70 @@ async function handleCreateDrive(e) {
             btn.disabled = false;
             btn.innerText = "📢 Announce Visiting Drive & Broadcast to Students";
         }
+    }
+}
+
+// Modal for Coordinator Assignment
+function openAssignCoordModal(jobId, compName) {
+    document.getElementById("modalAssignDriveId").value = jobId;
+    document.getElementById("modalAssignDriveTitle").innerText = compName;
+    const modal = document.getElementById("assignCoordModal");
+    if (modal) {
+        modal.style.display = 'flex';
+        loadCoordinatorsDropdown();
+    }
+}
+
+function closeAssignCoordModal() {
+    const modal = document.getElementById("assignCoordModal");
+    if (modal) modal.style.display = 'none';
+}
+
+async function submitCoordinatorAssignment() {
+    const jobId = document.getElementById("modalAssignDriveId").value;
+    const select = document.getElementById("modalAssignCoordSelect");
+    const coordId = select.value ? parseInt(select.value, 10) : null;
+    let coordName = null;
+    if (select.selectedIndex >= 0) {
+        const opt = select.options[select.selectedIndex];
+        coordName = opt.getAttribute("data-name") || null;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/jobs/${jobId}/assign-coordinator`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ coordinator_id: coordId, coordinator_name: coordName })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Coordinator assigned successfully!", "success");
+            closeAssignCoordModal();
+            loadVisitingDrives();
+        } else {
+            showToast(data.message || "Failed to assign coordinator", "error");
+        }
+    } catch (e) {
+        showToast("Server error during coordinator assignment", "error");
+    }
+}
+
+async function archiveDrive(jobId, willArchive) {
+    try {
+        const res = await fetch(`${API_BASE}/jobs/${jobId}/archive`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ is_archived: willArchive })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(data.message, "success");
+            loadVisitingDrives();
+        } else {
+            showToast(data.message || "Failed to update drive archive status", "error");
+        }
+    } catch (e) {
+        showToast("Server connection error", "error");
     }
 }
 
@@ -726,6 +848,7 @@ async function deleteDrive(jobId, companyName) {
             showToast(`Recruitment drive for ${companyName} removed.`, "success");
             loadVisitingDrives();
             loadAnalyticsDashboard();
+            checkPendingApprovalsBadge();
         } else {
             showToast(data.message || "Failed to delete drive.", "error");
         }
@@ -740,5 +863,444 @@ function viewCompanyApplicants(companyName) {
     loadApplicationsTable(companyName);
 }
 
+// ============================================================
+// TAB: APPROVAL WORKFLOW QUEUE
+// ============================================================
+
+async function loadApprovalQueue() {
+    const tbody = document.getElementById("approvalsTable");
+    if (!tbody) return;
+
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">Checking approval queue...</td></tr>`;
+
+    try {
+        const res = await fetch(`${API_BASE}/jobs?all=true`, { headers: getAuthHeaders() });
+        const data = await res.json();
+
+        if (data.success && data.jobs) {
+            const pendingJobs = data.jobs.filter(j => j.approval_status === 'Pending Approval' || j.approval_status === 'Changes Requested');
+
+            if (pendingJobs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:32px; color:var(--text-muted);">
+                    🎉 Great news! The approval queue is clear. No pending drive proposals awaiting review.
+                </td></tr>`;
+                checkPendingApprovalsBadge();
+                return;
+            }
+
+            tbody.innerHTML = pendingJobs.map(j => `
+                <tr>
+                    <td>
+                        <strong>${escapeHtml(j.company)}</strong><br>
+                        <small style="color:var(--text-secondary);">${escapeHtml(j.title)}</small>
+                    </td>
+                    <td>
+                        ${j.coordinator_name ? `<strong>${escapeHtml(j.coordinator_name)}</strong>` : '<span style="color:var(--text-muted);">Recruiter / Direct</span>'}
+                    </td>
+                    <td>
+                        <strong style="color:var(--success);">${escapeHtml(j.salary || j.package)}</strong>
+                    </td>
+                    <td>
+                        <span>${escapeHtml(j.visitDate || 'TBD')}</span>
+                    </td>
+                    <td>
+                        <div style="font-size:12px;">
+                            <span>Min CGPA: <strong>${j.cgpa}</strong></span> | 
+                            <span>Backlogs: <strong>≤ ${j.maxBacklogs || 0}</strong></span><br>
+                            <small style="color:var(--text-muted);">${escapeHtml(j.skills ? j.skills.substring(0, 45) + '...' : '')}</small>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge ${j.approval_status === 'Pending Approval' ? 'badge-warning' : 'badge-danger'}">
+                            ${escapeHtml(j.approval_status)}
+                        </span>
+                        ${j.approval_notes ? `<br><small style="color:var(--danger); font-size:11px;">Notes: ${escapeHtml(j.approval_notes)}</small>` : ''}
+                    </td>
+                    <td>
+                        <div style="display:flex; gap:6px;">
+                            <button onclick="approveDrive(${j.id})" class="btn btn-sm btn-primary" style="font-size:11px; padding:4px 8px;">
+                                ✓ Approve
+                            </button>
+                            <button onclick="rejectDrive(${j.id})" class="btn btn-sm btn-secondary" style="font-size:11px; padding:4px 8px; color:var(--danger);">
+                                ✕ Revise
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            checkPendingApprovalsBadge();
+        }
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--danger);">Error loading approval queue.</td></tr>`;
+    }
+}
+
+async function approveDrive(jobId) {
+    try {
+        const res = await fetch(`${API_BASE}/jobs/${jobId}/approve`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast("✓ Recruitment Drive approved and published to students!", "success");
+            loadApprovalQueue();
+            checkPendingApprovalsBadge();
+        } else {
+            showToast(data.message || "Failed to approve drive", "error");
+        }
+    } catch (e) {
+        showToast("Server error during drive approval", "error");
+    }
+}
+
+async function rejectDrive(jobId) {
+    const notes = prompt("Enter revision instructions or rejection notes for the coordinator/submitter:");
+    if (notes === null) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/jobs/${jobId}/reject`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ notes })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Revision requested and submitter notified.", "info");
+            loadApprovalQueue();
+            checkPendingApprovalsBadge();
+        } else {
+            showToast(data.message || "Failed to reject drive", "error");
+        }
+    } catch (e) {
+        showToast("Server error during rejection", "error");
+    }
+}
+
+// ============================================================
+// TAB: COORDINATOR MANAGEMENT
+// ============================================================
+
+function toggleAddCoordinatorForm(show) {
+    const card = document.getElementById("addCoordinatorCard");
+    if (card) card.style.display = show ? 'block' : 'none';
+}
+
+async function loadCoordinatorsList() {
+    const tbody = document.getElementById("coordinatorsTable");
+    if (!tbody) return;
+
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">Loading coordinators...</td></tr>`;
+
+    try {
+        const res = await fetch(`${API_BASE}/coordinators`, { headers: getAuthHeaders() });
+        const data = await res.json();
+
+        if (data.success && data.coordinators) {
+            allCoordinatorsList = data.coordinators;
+
+            if (data.coordinators.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:24px;">No coordinators registered yet. Click "+ Add Coordinator" to register departmental faculty coordinators.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.coordinators.map(c => `
+                <tr>
+                    <td>
+                        <strong>${escapeHtml(c.name)}</strong>
+                    </td>
+                    <td>
+                        <code>${escapeHtml(c.email)}</code>
+                    </td>
+                    <td>
+                        <span class="badge badge-primary">${escapeHtml(c.department || 'All Departments')}</span>
+                    </td>
+                    <td>
+                        ${escapeHtml(c.phone || 'N/A')}
+                    </td>
+                    <td>
+                        <strong>${c.assigned_drives_count || 0} Drives</strong>
+                    </td>
+                    <td>
+                        <span class="badge ${c.status === 'INACTIVE' ? 'badge-danger' : 'badge-success'}">
+                            ${c.status === 'INACTIVE' ? 'Inactive' : 'Active'}
+                        </span>
+                    </td>
+                    <td>
+                        <button onclick="deleteCoordinator(${c.id}, '${escapeHtml(c.name)}')" class="btn btn-sm btn-secondary" style="color:var(--danger); font-size:11px; padding:3px 8px;">
+                            🗑️ Remove
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--danger);">Error loading coordinators.</td></tr>`;
+    }
+}
+
+async function handleCreateCoordinator(e) {
+    e.preventDefault();
+    const name = document.getElementById("coordName").value.trim();
+    const email = document.getElementById("coordEmail").value.trim();
+    const password = document.getElementById("coordPass").value;
+    const department = document.getElementById("coordDept").value;
+    const phone = document.getElementById("coordPhone").value.trim();
+
+    try {
+        const res = await fetch(`${API_BASE}/coordinators`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ name, email, password, department, phone })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`✓ Placement Coordinator ${name} created successfully!`, "success");
+            document.getElementById("createCoordinatorForm").reset();
+            toggleAddCoordinatorForm(false);
+            loadCoordinatorsList();
+            loadCoordinatorsDropdown();
+        } else {
+            showToast(data.message || "Failed to create coordinator", "error");
+        }
+    } catch (e) {
+        showToast("Server error during coordinator registration", "error");
+    }
+}
+
+async function deleteCoordinator(id, name) {
+    if (!confirm(`Are you sure you want to remove Coordinator "${name}"?`)) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/coordinators/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`Coordinator ${name} removed.`, "success");
+            loadCoordinatorsList();
+            loadCoordinatorsDropdown();
+        } else {
+            showToast(data.message || "Failed to remove coordinator", "error");
+        }
+    } catch (e) {
+        showToast("Server error deleting coordinator", "error");
+    }
+}
+
+// ============================================================
+// TAB: REPORTS & CSV DATA EXPORT
+// ============================================================
+
+async function loadReportsData() {
+    const deptTbody = document.getElementById("reportDeptTable");
+    const compTbody = document.getElementById("reportCompanyTable");
+
+    try {
+        const res = await fetch(`${API_BASE}/reports/summary`, { headers: getAuthHeaders() });
+        const data = await res.json();
+
+        if (data.success) {
+            const { departmentBreakdown, companyBreakdown } = data;
+
+            if (deptTbody && departmentBreakdown) {
+                deptTbody.innerHTML = departmentBreakdown.map(d => `
+                    <tr>
+                        <td><strong>${escapeHtml(d.department)}</strong></td>
+                        <td>${d.total_enrolled}</td>
+                        <td><strong style="color:var(--success);">${d.placed_candidates}</strong></td>
+                        <td>${d.offers_count}</td>
+                        <td>${escapeHtml(d.average_ctc)}</td>
+                    </tr>
+                `).join('') || `<tr><td colspan="5" style="text-align:center;">No departmental records.</td></tr>`;
+            }
+
+            if (compTbody && companyBreakdown) {
+                compTbody.innerHTML = companyBreakdown.map(c => `
+                    <tr>
+                        <td><strong>${escapeHtml(c.company_name)}</strong></td>
+                        <td>${c.total_applicants}</td>
+                        <td><strong style="color:var(--success);">${c.offers_extended}</strong></td>
+                        <td>${escapeHtml(c.highest_package)}</td>
+                    </tr>
+                `).join('') || `<tr><td colspan="4" style="text-align:center;">No recruiter records.</td></tr>`;
+            }
+        }
+    } catch (e) {
+        console.error("Error loading report metrics:", e);
+    }
+}
+
+async function triggerCsvExport(type) {
+    showToast(`Generating ${type} CSV export...`, "info");
+    try {
+        const res = await fetch(`${API_BASE}/reports/export/${type}`, {
+            headers: getAuthHeaders()
+        });
+        if (!res.ok) {
+            showToast("Failed to generate CSV export", "error");
+            return;
+        }
+
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `placement_${type}_${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        showToast(`✓ ${type.toUpperCase()} CSV exported successfully!`, "success");
+    } catch (e) {
+        showToast("Error downloading CSV report", "error");
+    }
+}
+
+// ============================================================
+// TAB: CAMPUS ANNOUNCEMENTS
+// ============================================================
+
+async function loadAdminAnnouncements() {
+    const tbody = document.getElementById("announcementsTable");
+    if (!tbody) return;
+
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Loading announcements...</td></tr>`;
+
+    try {
+        const res = await fetch(`${API_BASE}/announcements`, { headers: getAuthHeaders() });
+        const data = await res.json();
+
+        if (data.success && data.announcements) {
+            if (data.announcements.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:24px;">No announcements published yet. Use the form above to broadcast notices.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.announcements.map(a => {
+                const d = new Date(a.created_at);
+                const dateStr = !isNaN(d.getTime()) ? d.toLocaleDateString() : a.created_at;
+
+                return `
+                    <tr>
+                        <td><small style="color:var(--text-muted);">${dateStr}</small></td>
+                        <td><span class="badge badge-purple">${escapeHtml(a.target_role)}</span></td>
+                        <td><span class="badge badge-primary">${escapeHtml(a.category)}</span></td>
+                        <td>
+                            <strong>${escapeHtml(a.title)}</strong>
+                            <p style="font-size:12px; color:var(--text-secondary); margin:4px 0 0 0;">${escapeHtml(a.message)}</p>
+                        </td>
+                        <td>
+                            <span class="badge ${a.priority === 'CRITICAL' ? 'badge-danger' : a.priority === 'HIGH' ? 'badge-warning' : 'badge-secondary'}">
+                                ${escapeHtml(a.priority)}
+                            </span>
+                        </td>
+                        <td>
+                            <button onclick="deleteAnnouncement(${a.id})" class="btn btn-sm btn-secondary" style="color:var(--danger); font-size:11px; padding:3px 8px;">
+                                🗑️ Remove
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--danger);">Error loading announcements.</td></tr>`;
+    }
+}
+
+async function handleCreateAnnouncement(e) {
+    e.preventDefault();
+    const title = document.getElementById("annTitle").value.trim();
+    const target_role = document.getElementById("annTarget").value;
+    const category = document.getElementById("annCategory").value;
+    const priority = document.getElementById("annPriority").value;
+    const message = document.getElementById("annMessage").value.trim();
+
+    try {
+        const res = await fetch(`${API_BASE}/announcements`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ title, target_role, category, priority, message })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast("🚀 Announcement broadcast successfully to campus!", "success");
+            document.getElementById("createAnnouncementForm").reset();
+            loadAdminAnnouncements();
+        } else {
+            showToast(data.message || "Failed to post announcement", "error");
+        }
+    } catch (e) {
+        showToast("Server error broadcasting announcement", "error");
+    }
+}
+
+async function deleteAnnouncement(id) {
+    if (!confirm("Are you sure you want to remove this announcement?")) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/announcements/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Announcement removed.", "success");
+            loadAdminAnnouncements();
+        } else {
+            showToast(data.message || "Failed to remove announcement", "error");
+        }
+    } catch (e) {
+        showToast("Server error removing announcement", "error");
+    }
+}
+
+// ============================================================
+// TAB: SYSTEM AUDIT TRAIL
+// ============================================================
+
+async function loadAdminAuditLogs() {
+    const tbody = document.getElementById("auditLogsTable");
+    if (!tbody) return;
+
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Loading audit logs...</td></tr>`;
+
+    try {
+        const res = await fetch(`${API_BASE}/audit-logs`, { headers: getAuthHeaders() });
+        const data = await res.json();
+
+        if (data.success && data.logs) {
+            if (data.logs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:24px;">No audit logs recorded yet.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.logs.map(log => {
+                const d = new Date(log.created_at);
+                const timeStr = !isNaN(d.getTime()) ? d.toLocaleString() : log.created_at;
+
+                return `
+                    <tr>
+                        <td><small style="color:var(--text-muted);">${timeStr}</small></td>
+                        <td><strong>${escapeHtml(log.user_name || 'System')}</strong></td>
+                        <td><span class="badge badge-purple">${escapeHtml(log.role || 'ADMIN')}</span></td>
+                        <td><span class="badge badge-primary">${escapeHtml(log.action)}</span></td>
+                        <td><code>${escapeHtml(log.entity_type || '-')} #${log.entity_id || ''}</code></td>
+                        <td style="max-width:320px; font-size:12.5px;">${escapeHtml(log.details || '')}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--danger);">Error loading audit trail.</td></tr>`;
+    }
+}
+
 // Initial load
 loadAnalyticsDashboard();
+checkPendingApprovalsBadge();
+loadCoordinatorsDropdown();

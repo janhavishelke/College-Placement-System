@@ -70,6 +70,7 @@ exports.applyToJob = async (req, res) => {
         return res.status(201).json({
             success: true,
             message: 'Application submitted successfully!',
+            applicationId: newAppId,
             application: newApp
         });
     } catch (err) {
@@ -122,6 +123,9 @@ exports.getCompanyApplications = async (req, res) => {
 
         if (req.user.role === 'COMPANY') {
             sql += ` WHERE j.company_id = ?`;
+            params.push(req.user.id);
+        } else if (req.user.role === 'COORDINATOR' && req.query.assignedOnly === 'true') {
+            sql += ` WHERE (j.coordinator_id = ? OR j.coordinator_id IS NULL)`;
             params.push(req.user.id);
         }
 
@@ -182,8 +186,12 @@ exports.updateApplicationStatus = async (req, res) => {
             });
         }
 
-        // Check permission if company
-        if (req.user.role === 'COMPANY' && application.company_id !== req.user.id) {
+        // Check permission: Admin, Placement Head, Coordinator, or Company owner
+        const isHeadOrAdmin = req.user.role === 'ADMIN' || req.user.role === 'PLACEMENT_HEAD';
+        const isCoordinator = req.user.role === 'COORDINATOR';
+        const isCompanyOwner = req.user.role === 'COMPANY' && application.company_id === req.user.id;
+
+        if (!isHeadOrAdmin && !isCoordinator && !isCompanyOwner) {
             return res.status(403).json({
                 success: false,
                 message: 'You are not authorized to update applications for this job.'
@@ -191,11 +199,18 @@ exports.updateApplicationStatus = async (req, res) => {
         }
 
         const effectiveStage = stage || status;
-        const effectiveNotes = notes || `Application moved to ${status} stage by ${req.user.role === 'COMPANY' ? application.company_name : 'Placement Cell'}.`;
+        const effectiveNotes = notes || `Application moved to ${status} stage by ${req.user.role === 'COMPANY' ? application.company_name : (req.user.role === 'COORDINATOR' ? `Coordinator (${req.user.name})` : 'Placement Cell')}.`;
 
         await run(
             'UPDATE applications SET status = ?, stage = ?, stage_notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
             [status, effectiveStage, effectiveNotes, id]
+        );
+
+        // Audit Trail
+        await run(
+            `INSERT INTO audit_logs (user_id, user_name, user_role, action, target_type, target_id, details)
+             VALUES (?, ?, ?, 'UPDATE_APPLICATION', 'APPLICATION', ?, ?)`,
+            [req.user.id, req.user.name, req.user.role, id, `Changed application status of ${application.student_name} (${application.company_name} - ${application.title}) to '${status}'.`]
         );
 
         // Log timeline entry

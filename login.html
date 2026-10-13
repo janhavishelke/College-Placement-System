@@ -31,6 +31,8 @@
         <div style="margin-bottom: 16px; padding: 12px; background:var(--bg-subtle); border-radius:var(--radius-sm); font-size:12px;">
             <div style="font-weight:600; margin-bottom:6px;">Quick Fill Demo Account:</div>
             <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button type="button" class="btn btn-sm btn-outline" onclick="fillDemo('tpo@placement.edu', 'Head@123', 'PLACEMENT_HEAD')">👑 Placement Head</button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="fillDemo('coordinator@placement.edu', 'Coord@123', 'COORDINATOR')">🤝 Coordinator</button>
                 <button type="button" class="btn btn-sm btn-outline" onclick="fillDemo('rahul@student.edu', 'Student@123', 'STUDENT')">👨‍🎓 Student</button>
                 <button type="button" class="btn btn-sm btn-outline" onclick="fillDemo('tcs@placement.edu', 'Company@123', 'COMPANY')">🏢 Recruiter</button>
                 <button type="button" class="btn btn-sm btn-outline" onclick="fillDemo('admin@placement.edu', 'Admin@123', 'ADMIN')">🛡️ Admin</button>
@@ -47,9 +49,11 @@
             <label>Login Role</label>
             <select id="role" required>
                 <option value="">Select Role...</option>
-                <option value="STUDENT">Student Candidate</option>
-                <option value="COMPANY">Partner Recruiter</option>
-                <option value="ADMIN">Placement Officer / Admin</option>
+                <option value="PLACEMENT_HEAD">👑 Placement Head / TPO</option>
+                <option value="COORDINATOR">🤝 Placement Coordinator</option>
+                <option value="STUDENT">👨‍🎓 Student Candidate</option>
+                <option value="COMPANY">🏢 Partner Recruiter</option>
+                <option value="ADMIN">🛡️ System Administrator</option>
             </select>
 
             <button type="submit" class="btn btn-primary btn-full" style="padding:12px;" id="loginBtn">

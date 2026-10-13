@@ -7,9 +7,15 @@ const { authenticateToken, optionalAuthenticate, authorizeRoles } = require('../
 router.get('/', optionalAuthenticate, jobsController.getAllJobs);
 router.get('/:id', optionalAuthenticate, jobsController.getJobById);
 
-// Company & Admin only
-router.post('/', authenticateToken, authorizeRoles('COMPANY', 'ADMIN'), jobsController.createJob);
-router.put('/:id', authenticateToken, authorizeRoles('COMPANY', 'ADMIN'), jobsController.updateJob);
-router.delete('/:id', authenticateToken, authorizeRoles('COMPANY', 'ADMIN'), jobsController.deleteJob);
+// Company, Coordinator, Placement Head, Admin
+router.post('/', authenticateToken, authorizeRoles('COMPANY', 'ADMIN', 'PLACEMENT_HEAD', 'COORDINATOR'), jobsController.createJob);
+router.put('/:id', authenticateToken, authorizeRoles('COMPANY', 'ADMIN', 'PLACEMENT_HEAD', 'COORDINATOR'), jobsController.updateJob);
+router.delete('/:id', authenticateToken, authorizeRoles('COMPANY', 'ADMIN', 'PLACEMENT_HEAD'), jobsController.deleteJob);
+
+// Placement Head Approval & Coordination Workflow routes
+router.post('/:id/approve', authenticateToken, authorizeRoles('ADMIN', 'PLACEMENT_HEAD'), jobsController.approveDrive);
+router.post('/:id/reject', authenticateToken, authorizeRoles('ADMIN', 'PLACEMENT_HEAD'), jobsController.rejectDrive);
+router.post('/:id/assign-coordinator', authenticateToken, authorizeRoles('ADMIN', 'PLACEMENT_HEAD'), jobsController.assignCoordinator);
+router.post('/:id/archive', authenticateToken, authorizeRoles('ADMIN', 'PLACEMENT_HEAD'), jobsController.archiveDrive);
 
 module.exports = router;

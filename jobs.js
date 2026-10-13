@@ -21,7 +21,8 @@ function updateNavbar() {
 
         let dashboardLink = "student-dashboard.html";
         if (role === "COMPANY") dashboardLink = "company.html";
-        else if (role === "ADMIN") dashboardLink = "admin-dashboard.html";
+        else if (role === "ADMIN" || role === "PLACEMENT_HEAD") dashboardLink = "admin-dashboard.html";
+        else if (role === "COORDINATOR") dashboardLink = "coordinator-dashboard.html";
 
         nav.innerHTML = `
             <a href="index.html">Home</a>

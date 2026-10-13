@@ -51,8 +51,12 @@ document
                     window.location.href = "student-dashboard.html";
                 } else if (data.user.role === "COMPANY") {
                     window.location.href = "company.html";
-                } else if (data.user.role === "ADMIN") {
+                } else if (data.user.role === "COORDINATOR") {
+                    window.location.href = "coordinator-dashboard.html";
+                } else if (data.user.role === "ADMIN" || data.user.role === "PLACEMENT_HEAD") {
                     window.location.href = "admin-dashboard.html";
+                } else {
+                    window.location.href = "index.html";
                 }
             }, 800);
 

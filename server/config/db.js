@@ -70,13 +70,62 @@ async function initDatabase() {
             name TEXT NOT NULL,
             email TEXT UNIQUE NOT NULL COLLATE NOCASE,
             password TEXT NOT NULL,
-            role TEXT NOT NULL CHECK(role IN ('STUDENT', 'COMPANY', 'ADMIN')),
+            role TEXT NOT NULL CHECK(role IN ('STUDENT', 'COMPANY', 'ADMIN', 'PLACEMENT_HEAD', 'COORDINATOR')),
             branch TEXT DEFAULT '',
             cgpa REAL DEFAULT 0.0,
             skills TEXT DEFAULT '',
+            department TEXT DEFAULT '',
+            phone TEXT DEFAULT '',
+            status TEXT DEFAULT 'Active',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `);
+
+    // Ensure users table CHECK constraint supports PLACEMENT_HEAD and COORDINATOR
+    try {
+        const usersSqlRow = await get("SELECT sql FROM sqlite_master WHERE type='table' AND name='users'");
+        if (usersSqlRow && usersSqlRow.sql && (!usersSqlRow.sql.includes('COORDINATOR') || !usersSqlRow.sql.includes('PLACEMENT_HEAD'))) {
+            console.log('Migrating users table schema to support PLACEMENT_HEAD and COORDINATOR roles...');
+            await run('PRAGMA foreign_keys = OFF');
+            await run(`
+                CREATE TABLE IF NOT EXISTS users_new (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    email TEXT UNIQUE NOT NULL COLLATE NOCASE,
+                    password TEXT NOT NULL,
+                    role TEXT NOT NULL CHECK(role IN ('STUDENT', 'COMPANY', 'ADMIN', 'PLACEMENT_HEAD', 'COORDINATOR')),
+                    branch TEXT DEFAULT '',
+                    cgpa REAL DEFAULT 0.0,
+                    skills TEXT DEFAULT '',
+                    backlogs INTEGER DEFAULT 0,
+                    batch TEXT DEFAULT '2026',
+                    interests TEXT DEFAULT 'Software Engineering, Web Development',
+                    resume_text TEXT DEFAULT '',
+                    resume_filename TEXT DEFAULT '',
+                    portfolio_url TEXT DEFAULT '',
+                    projects TEXT DEFAULT '',
+                    company_logo TEXT DEFAULT '',
+                    company_website TEXT DEFAULT '',
+                    company_description TEXT DEFAULT '',
+                    department TEXT DEFAULT '',
+                    phone TEXT DEFAULT '',
+                    status TEXT DEFAULT 'Active',
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+            await run(`
+                INSERT INTO users_new (id, name, email, password, role, branch, cgpa, skills, backlogs, batch, interests, resume_text, resume_filename, portfolio_url, projects, company_logo, company_website, company_description, department, phone, status, created_at)
+                SELECT id, name, email, password, role, branch, cgpa, skills, COALESCE(backlogs, 0), COALESCE(batch, '2026'), COALESCE(interests, ''), COALESCE(resume_text, ''), COALESCE(resume_filename, ''), COALESCE(portfolio_url, ''), COALESCE(projects, ''), COALESCE(company_logo, ''), COALESCE(company_website, ''), COALESCE(company_description, ''), COALESCE(branch, ''), '', 'Active', created_at
+                FROM users
+            `);
+            await run('DROP TABLE users');
+            await run('ALTER TABLE users_new RENAME TO users');
+            await run('PRAGMA foreign_keys = ON');
+            console.log('Users table successfully migrated to support PLACEMENT_HEAD and COORDINATOR.');
+        }
+    } catch (uMigErr) {
+        console.warn('Users table migration check:', uMigErr.message);
+    }
 
     await run(`
         CREATE TABLE IF NOT EXISTS jobs (
@@ -114,6 +163,9 @@ async function initDatabase() {
     await ensureColumn('users', 'resume_filename', "TEXT DEFAULT ''");
     await ensureColumn('users', 'portfolio_url', "TEXT DEFAULT ''");
     await ensureColumn('users', 'projects', "TEXT DEFAULT ''");
+    await ensureColumn('users', 'department', "TEXT DEFAULT ''");
+    await ensureColumn('users', 'phone', "TEXT DEFAULT ''");
+    await ensureColumn('users', 'status', "TEXT DEFAULT 'Active'");
 
     await ensureColumn('jobs', 'eligible_branches', "TEXT DEFAULT 'Computer Engineering, Information Technology, AI & ML'");
     await ensureColumn('jobs', 'max_backlogs', 'INTEGER DEFAULT 0');
@@ -131,6 +183,19 @@ async function initDatabase() {
     await ensureColumn('jobs', 'website', "TEXT DEFAULT ''");
     await ensureColumn('jobs', 'recruitment_status', "TEXT DEFAULT 'Upcoming'");
 
+    // Placement Coordinator & Head Workflow Columns
+    await ensureColumn('jobs', 'approval_status', "TEXT DEFAULT 'Approved'");
+    await ensureColumn('jobs', 'coordinator_id', 'INTEGER DEFAULT NULL');
+    await ensureColumn('jobs', 'coordinator_name', "TEXT DEFAULT ''");
+    await ensureColumn('jobs', 'industry', "TEXT DEFAULT 'Information Technology'");
+    await ensureColumn('jobs', 'stipend', "TEXT DEFAULT ''");
+    await ensureColumn('jobs', 'internship_duration', "TEXT DEFAULT ''");
+    await ensureColumn('jobs', 'available_positions', 'INTEGER DEFAULT 10');
+    await ensureColumn('jobs', 'selection_process', "TEXT DEFAULT 'Online Assessment -> Technical Interview -> HR Round'");
+    await ensureColumn('jobs', 'graduation_year', "TEXT DEFAULT '2026'");
+    await ensureColumn('jobs', 'approval_notes', "TEXT DEFAULT ''");
+    await ensureColumn('jobs', 'is_archived', 'INTEGER DEFAULT 0');
+
     await ensureColumn('users', 'company_logo', "TEXT DEFAULT ''");
     await ensureColumn('users', 'company_website', "TEXT DEFAULT ''");
     await ensureColumn('users', 'company_description', "TEXT DEFAULT ''");
@@ -138,6 +203,38 @@ async function initDatabase() {
     await ensureColumn('applications', 'stage', "TEXT DEFAULT 'Applied'");
     await ensureColumn('applications', 'stage_notes', "TEXT DEFAULT ''");
     await ensureColumn('applications', 'updated_at', "TEXT DEFAULT ''");
+
+    // Institutional Audit Logs
+    await run(`
+        CREATE TABLE IF NOT EXISTS audit_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            user_name TEXT NOT NULL,
+            user_role TEXT NOT NULL,
+            action TEXT NOT NULL,
+            target_type TEXT NOT NULL,
+            target_id INTEGER,
+            details TEXT NOT NULL,
+            ip_address TEXT DEFAULT '',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    // Placement Announcements
+    await run(`
+        CREATE TABLE IF NOT EXISTS announcements (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            author_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            author_name TEXT NOT NULL,
+            author_role TEXT NOT NULL,
+            title TEXT NOT NULL,
+            content TEXT NOT NULL,
+            target_role TEXT NOT NULL DEFAULT 'ALL',
+            job_id INTEGER REFERENCES jobs(id) ON DELETE SET NULL,
+            priority TEXT NOT NULL DEFAULT 'NORMAL',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
 
     // Ensure applications table CHECK constraint supports all 8 status workflows
     try {
@@ -907,6 +1004,91 @@ async function initDatabase() {
         await run(`INSERT INTO prep_coding_submissions (student_id, challenge_id, code, status, test_results) VALUES (1, 1, 'function twoSum...', 'Passed', 'All 3 test cases passed')`);
         await run(`INSERT INTO prep_mock_interviews (student_id, role_type, transcript, score, technical_rating, communication_rating, feedback)
             VALUES (1, 'Software Engineer', '[]', 88, 9.0, 8.5, 'Strong command of data structures and clean explanations.')`);
+    }
+
+    // Ensure Placement Head (TPO) exists
+    const tpoExists = await get("SELECT id FROM users WHERE email = 'tpo@placement.edu'");
+    if (!tpoExists) {
+        const tpoHash = bcrypt.hashSync('Head@123', 10);
+        await run(
+            `INSERT INTO users (name, email, password, role, department, phone, status)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            ['Dr. Rajesh Sharma (Placement Head)', 'tpo@placement.edu', tpoHash, 'PLACEMENT_HEAD', 'Training & Placement Cell', '+91 98765 00001', 'Active']
+        );
+        console.log('Seeded Placement Head user: tpo@placement.edu');
+    }
+
+    // Ensure Placement Coordinators exist
+    let coordId = 1;
+    const coordExists = await get("SELECT id FROM users WHERE email = 'coordinator@placement.edu'");
+    if (!coordExists) {
+        const coordHash = bcrypt.hashSync('Coord@123', 10);
+        const coordRes = await run(
+            `INSERT INTO users (name, email, password, role, department, phone, status)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            ['Prof. Sneha Deshmukh (Placement Coordinator)', 'coordinator@placement.edu', coordHash, 'COORDINATOR', 'Computer Engineering', '+91 98765 11111', 'Active']
+        );
+        coordId = coordRes.lastID;
+        console.log('Seeded Placement Coordinator user: coordinator@placement.edu');
+    } else {
+        coordId = coordExists.id;
+    }
+
+    const coord2Exists = await get("SELECT id FROM users WHERE email = 'coord.it@placement.edu'");
+    if (!coord2Exists) {
+        const coordHash = bcrypt.hashSync('Coord@123', 10);
+        await run(
+            `INSERT INTO users (name, email, password, role, department, phone, status)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            ['Prof. Amit Verma (Placement Coordinator)', 'coord.it@placement.edu', coordHash, 'COORDINATOR', 'Information Technology', '+91 98765 22222', 'Active']
+        );
+        console.log('Seeded Placement Coordinator user: coord.it@placement.edu');
+    }
+
+    // Assign coordinators to existing jobs if unassigned
+    await run(
+        `UPDATE jobs SET coordinator_id = ?, coordinator_name = 'Prof. Sneha Deshmukh', approval_status = 'Approved', industry = 'Information Technology' WHERE coordinator_id IS NULL OR coordinator_id = 0`,
+        [coordId]
+    );
+
+    // Seed Campus Announcements
+    const annCount = await get("SELECT COUNT(*) as count FROM announcements");
+    if (annCount.count === 0) {
+        await run(
+            `INSERT INTO announcements (author_name, author_role, title, content, target_role, priority)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            ['Dr. Rajesh Sharma (Placement Head)', 'PLACEMENT_HEAD', '🎓 Academic Session 2026 Campus Recruitment Kickoff', 'Campus recruitment drives have commenced for the 2026 graduating batch. Verify your CGPA cutoffs, active backlogs, and updated resume in your student portal before registering.', 'ALL', 'HIGH']
+        );
+        await run(
+            `INSERT INTO announcements (author_name, author_role, title, content, target_role, priority)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            ['Prof. Sneha Deshmukh (Placement Coordinator)', 'COORDINATOR', '📋 TCS Software Developer Online Assessment Venue', 'The online coding round for shortlisted TCS candidates is scheduled for Nov 22, 2026 at 09:30 AM in Computer Labs 1 & 2. College ID and registration slip are mandatory.', 'STUDENT', 'URGENT']
+        );
+        await run(
+            `INSERT INTO announcements (author_name, author_role, title, content, target_role, priority)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            ['Dr. Rajesh Sharma (Placement Head)', 'PLACEMENT_HEAD', '📌 Placement Coordinator Guidelines & Drive Verification Notice', 'Coordinators are requested to submit verified visiting company CTC breakdowns and eligibility criteria matrices for administrative review at least 5 days prior to on-campus arrival.', 'COORDINATOR', 'NORMAL']
+        );
+    }
+
+    // Seed Institutional Audit Trail
+    const auditCount = await get("SELECT COUNT(*) as count FROM audit_logs");
+    if (auditCount.count === 0) {
+        await run(
+            `INSERT INTO audit_logs (user_name, user_role, action, target_type, target_id, details)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            ['Dr. Rajesh Sharma', 'PLACEMENT_HEAD', 'APPROVE_DRIVE', 'DRIVE', 1, 'Approved TCS Software Developer recruitment drive with 6.5 LPA CTC.']
+        );
+        await run(
+            `INSERT INTO audit_logs (user_name, user_role, action, target_type, target_id, details)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            ['Prof. Sneha Deshmukh', 'COORDINATOR', 'UPDATE_DRIVE', 'DRIVE', 2, 'Updated Infosys eligibility criteria and technical interview schedule.']
+        );
+        await run(
+            `INSERT INTO audit_logs (user_name, user_role, action, target_type, target_id, details)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            ['Dr. Rajesh Sharma', 'PLACEMENT_HEAD', 'ASSIGN_COORDINATOR', 'DRIVE', 1, 'Assigned Prof. Sneha Deshmukh as primary coordinator for TCS drive.']
+        );
     }
 
     console.log('Database schema and rich test data initialized successfully.');
