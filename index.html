@@ -664,17 +664,146 @@ async function quickLogin(email, password, role, redirectUrl) {
     }
 }
 
+function renderVisitingDrivesToGrid(jobs, grid) {
+    if (!grid) return;
+    if (!Array.isArray(jobs) || jobs.length === 0) {
+        grid.innerHTML = `
+            <div class="empty-state" style="grid-column: 1 / -1;">
+                <div class="empty-state-icon">🏢</div>
+                <h3>No Campus Drives Scheduled</h3>
+                <p>Visiting recruiters will appear here once announced by the Placement Cell.</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Update Spotlight Card with the top visiting drive
+    const topDrive = jobs[0];
+    if (topDrive) {
+        const compEl = document.getElementById("spotlightCompany");
+        const roleEl = document.getElementById("spotlightRole");
+        const visitEl = document.getElementById("spotlightVisitDate");
+        const deadEl = document.getElementById("spotlightDeadline");
+        const salEl = document.getElementById("spotlightSalary");
+        const locEl = document.getElementById("spotlightLocation");
+        const cgpaEl = document.getElementById("spotlightCgpa");
+        const backEl = document.getElementById("spotlightBacklogs");
+        const branchEl = document.getElementById("spotlightBranches");
+        const modeEl = document.getElementById("spotlightMode");
+
+        if (compEl) compEl.innerText = topDrive.company || topDrive.company_name;
+        if (roleEl) roleEl.innerText = topDrive.title;
+        if (visitEl) visitEl.innerHTML = `🗓️ <strong>Campus Visit:</strong> ${escapeHtml(topDrive.visitDate || topDrive.deadline || 'Schedule Announced')}`;
+        if (deadEl) deadEl.innerHTML = `⏳ <strong>Apply Before:</strong> ${escapeHtml(topDrive.deadline || 'Open')}`;
+        if (salEl) salEl.innerText = topDrive.salary || topDrive.package;
+        if (locEl) locEl.innerText = topDrive.location || 'On-Campus';
+        if (cgpaEl) cgpaEl.innerText = topDrive.cgpa;
+        if (backEl) backEl.innerText = topDrive.maxBacklogs !== undefined ? topDrive.maxBacklogs : 0;
+        if (branchEl) branchEl.innerText = topDrive.eligibleBranches || topDrive.eligible_branches;
+        if (modeEl) modeEl.innerText = topDrive.workMode || 'On-Campus';
+
+        // Attach View Details button to spotlight card
+        const spotlightCard = document.querySelector('.hero-spotlight-card') || document.querySelector('.spotlight-card');
+        if (spotlightCard && !document.getElementById('spotlightDetailsBtn')) {
+            const btnWrap = document.createElement('div');
+            btnWrap.style.marginTop = '16px';
+            btnWrap.innerHTML = `
+                <button id="spotlightDetailsBtn" onclick="openCompanyDetailsModal(${topDrive.id})" class="btn btn-sm btn-primary" style="width:100%;">
+                    🏢 View Drive Details & Criteria
+                </button>
+            `;
+            spotlightCard.appendChild(btnWrap);
+        }
+    }
+
+    // Render top 6 upcoming visiting drives
+    const displayDrives = jobs.slice(0, 6);
+    grid.innerHTML = displayDrives.map(job => {
+        const skillChips = (job.skills || '').split(/[,;|]/).map(s => s.trim()).filter(Boolean)
+            .slice(0, 4).map(s => `<span class="skill-chip skill-matched">${escapeHtml(s)}</span>`).join('');
+        const compName = job.company || job.company_name;
+        const recStatus = job.recruitmentStatus || job.recruitment_status || 'Upcoming';
+
+        return `
+            <div class="rec-card" style="border-top: 4px solid var(--primary); background:#FFFFFF; border-radius:16px;">
+                <div>
+                    <div class="rec-card-top">
+                        <div>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <h3 style="margin-bottom:2px; font-size:17px; color:var(--text-primary);">${escapeHtml(compName)}</h3>
+                                <span class="badge ${recStatus.toLowerCase() === 'active' ? 'badge-success' : 'badge-primary'}" style="font-size:10px;">
+                                    ${escapeHtml(recStatus)}
+                                </span>
+                            </div>
+                            <span class="company-name" style="font-size:14px; font-weight:600; color:var(--primary); display:block;">
+                                💼 ${escapeHtml(job.title)}
+                            </span>
+                        </div>
+                        <span class="badge badge-primary">${escapeHtml(job.workMode || 'On-Campus')}</span>
+                    </div>
+
+                    <div style="background:var(--primary-subtle); border:1px solid rgba(108,76,241,0.2); padding:10px 12px; border-radius:var(--radius-sm); margin:12px 0; font-size:12px; font-weight:700; color:var(--primary); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                        <span>🗓️ Visit: ${escapeHtml(job.visitDate || job.deadline)}</span>
+                        <span style="color:var(--warning);">⏳ Deadline: ${escapeHtml(job.deadline)}</span>
+                    </div>
+
+                    <div class="rec-card-meta">
+                        <div class="meta-item">💰 <strong>${escapeHtml(job.salary || job.package)}</strong></div>
+                        <div class="meta-item">📍 <span>${escapeHtml(job.location || 'On-Campus')}</span></div>
+                        <div class="meta-item">🎓 <span>Min CGPA: <strong>${job.cgpa}</strong></span></div>
+                        <div class="meta-item">⚠️ <span>Backlogs: <strong>≤ ${job.maxBacklogs !== undefined ? job.maxBacklogs : 0}</strong></span></div>
+                    </div>
+
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">
+                        <strong>Eligible:</strong> ${escapeHtml(job.eligibleBranches || job.eligible_branches)}
+                    </div>
+
+                    <div class="skill-chips-row">
+                        ${skillChips}
+                    </div>
+                </div>
+
+                <div class="rec-actions" style="margin-top: 14px; gap:8px;">
+                    <button onclick="openCompanyDetailsModal(${job.id})" class="btn btn-sm btn-outline" style="flex:1;">
+                        🏢 View Details
+                    </button>
+                    <a href="login.html" class="btn btn-sm btn-primary" style="flex:1;">
+                        🚀 Apply Now
+                    </a>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
 // Fetch and render live visiting companies on the home page
 async function loadHomeVisitingCompanies() {
     const grid = document.getElementById("homeVisitingGrid");
     if (!grid) return;
 
-    // Show loading skeleton
-    grid.innerHTML = `
-        <div class="skeleton" style="height: 280px; border-radius:16px;"></div>
-        <div class="skeleton" style="height: 280px; border-radius:16px;"></div>
-        <div class="skeleton" style="height: 280px; border-radius:16px;"></div>
-    `;
+    // Instant restoration from cache if available
+    let hasRenderedCache = false;
+    try {
+        if (typeof sessionStorage !== 'undefined') {
+            const cached = sessionStorage.getItem('placement_visiting_drives_cache');
+            if (cached) {
+                const list = JSON.parse(cached);
+                if (Array.isArray(list) && list.length > 0) {
+                    renderVisitingDrivesToGrid(list, grid);
+                    hasRenderedCache = true;
+                }
+            }
+        }
+    } catch (_) {}
+
+    // Show loading skeleton if no cache was available
+    if (!hasRenderedCache) {
+        grid.innerHTML = `
+            <div class="skeleton" style="height: 280px; border-radius:16px;"></div>
+            <div class="skeleton" style="height: 280px; border-radius:16px;"></div>
+            <div class="skeleton" style="height: 280px; border-radius:16px;"></div>
+        `;
+    }
 
     try {
         let drives = [];
@@ -689,121 +818,25 @@ async function loadHomeVisitingCompanies() {
             }
         }
 
-        if (Array.isArray(drives) && drives.length > 0) {
-            const jobs = drives;
-
-            // Update Spotlight Card with the first visiting drive
-            const topDrive = jobs[0];
-            if (topDrive) {
-                const compEl = document.getElementById("spotlightCompany");
-                const roleEl = document.getElementById("spotlightRole");
-                const visitEl = document.getElementById("spotlightVisitDate");
-                const deadEl = document.getElementById("spotlightDeadline");
-                const salEl = document.getElementById("spotlightSalary");
-                const locEl = document.getElementById("spotlightLocation");
-                const cgpaEl = document.getElementById("spotlightCgpa");
-                const backEl = document.getElementById("spotlightBacklogs");
-                const branchEl = document.getElementById("spotlightBranches");
-                const modeEl = document.getElementById("spotlightMode");
-
-                if (compEl) compEl.innerText = topDrive.company || topDrive.company_name;
-                if (roleEl) roleEl.innerText = topDrive.title;
-                if (visitEl) visitEl.innerHTML = `🗓️ <strong>Campus Visit:</strong> ${escapeHtml(topDrive.visitDate || topDrive.deadline || 'Schedule Announced')}`;
-                if (deadEl) deadEl.innerHTML = `⏳ <strong>Apply Before:</strong> ${escapeHtml(topDrive.deadline || 'Open')}`;
-                if (salEl) salEl.innerText = topDrive.salary || topDrive.package;
-                if (locEl) locEl.innerText = topDrive.location || 'On-Campus';
-                if (cgpaEl) cgpaEl.innerText = topDrive.cgpa;
-                if (backEl) backEl.innerText = topDrive.maxBacklogs !== undefined ? topDrive.maxBacklogs : 0;
-                if (branchEl) branchEl.innerText = topDrive.eligibleBranches || topDrive.eligible_branches;
-                if (modeEl) modeEl.innerText = topDrive.workMode || 'On-Campus';
-
-                // Add Spotlight View Details button if not present
-                const spotlightCard = document.querySelector('.spotlight-card');
-                if (spotlightCard && !document.getElementById('spotlightDetailsBtn')) {
-                    const btnWrap = document.createElement('div');
-                    btnWrap.style.marginTop = '16px';
-                    btnWrap.innerHTML = `
-                        <button id="spotlightDetailsBtn" onclick="openCompanyDetailsModal(${topDrive.id})" class="btn btn-sm btn-primary" style="width:100%;">
-                            🏢 View Drive Details & Criteria
-                        </button>
-                    `;
-                    spotlightCard.appendChild(btnWrap);
-                }
-            }
-
-            // Render top 6 upcoming visiting drives
-            const displayDrives = jobs.slice(0, 6);
-            grid.innerHTML = displayDrives.map(job => {
-                const skillChips = (job.skills || '').split(/[,;|]/).map(s => s.trim()).filter(Boolean)
-                    .slice(0, 4).map(s => `<span class="skill-chip skill-matched">${escapeHtml(s)}</span>`).join('');
-                const compName = job.company || job.company_name;
-                const recStatus = job.recruitmentStatus || job.recruitment_status || 'Upcoming';
-
-                return `
-                    <div class="rec-card" style="border-top: 4px solid var(--primary); background:#FFFFFF; border-radius:16px;">
-                        <div>
-                            <div class="rec-card-top">
-                                <div>
-                                    <div style="display:flex; align-items:center; gap:8px;">
-                                        <h3 style="margin-bottom:2px; font-size:17px; color:var(--text-primary);">${escapeHtml(compName)}</h3>
-                                        <span class="badge ${recStatus.toLowerCase() === 'active' ? 'badge-success' : 'badge-primary'}" style="font-size:10px;">
-                                            ${escapeHtml(recStatus)}
-                                        </span>
-                                    </div>
-                                    <span class="company-name" style="font-size:14px; font-weight:600; color:var(--primary); display:block;">
-                                        💼 ${escapeHtml(job.title)}
-                                    </span>
-                                </div>
-                                <span class="badge badge-primary">${escapeHtml(job.workMode || 'On-Campus')}</span>
-                            </div>
-
-                            <div style="background:var(--primary-subtle); border:1px solid rgba(108,76,241,0.2); padding:10px 12px; border-radius:var(--radius-sm); margin:12px 0; font-size:12px; font-weight:700; color:var(--primary); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
-                                <span>🗓️ Visit: ${escapeHtml(job.visitDate || job.deadline)}</span>
-                                <span style="color:var(--warning);">⏳ Deadline: ${escapeHtml(job.deadline)}</span>
-                            </div>
-
-                            <div class="rec-card-meta">
-                                <div class="meta-item">💰 <strong>${escapeHtml(job.salary || job.package)}</strong></div>
-                                <div class="meta-item">📍 <span>${escapeHtml(job.location || 'On-Campus')}</span></div>
-                                <div class="meta-item">🎓 <span>Min CGPA: <strong>${job.cgpa}</strong></span></div>
-                                <div class="meta-item">⚠️ <span>Backlogs: <strong>≤ ${job.maxBacklogs !== undefined ? job.maxBacklogs : 0}</strong></span></div>
-                            </div>
-
-                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">
-                                <strong>Eligible:</strong> ${escapeHtml(job.eligibleBranches || job.eligible_branches)}
-                            </div>
-
-                            <div class="skill-chips-row">
-                                ${skillChips}
-                            </div>
-                        </div>
-
-                        <div class="rec-actions" style="margin-top: 14px; gap:8px;">
-                            <button onclick="openCompanyDetailsModal(${job.id})" class="btn btn-sm btn-outline" style="flex:1;">
-                                🏢 View Details
-                            </button>
-                            <a href="login.html" class="btn btn-sm btn-primary" style="flex:1;">
-                                🚀 Apply Now
-                            </a>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        } else {
-            grid.innerHTML = `
-                <div class="empty-state" style="grid-column: 1 / -1;">
-                    <div class="empty-state-icon">🏢</div>
-                    <h3>No Campus Drives Scheduled</h3>
-                    <p>Visiting recruiters will appear here once announced by the Placement Cell.</p>
-                </div>
-            `;
-        }
+        renderVisitingDrivesToGrid(drives, grid);
     } catch (err) {
         console.error("Home visiting companies error:", err);
+        // If cached drives are already showing, don't replace with error banner
+        if (hasRenderedCache) return;
+
+        const isFileProtocol = typeof window !== 'undefined' && window.location && window.location.protocol === 'file:';
         grid.innerHTML = `
-            <div style="grid-column:1 / -1; text-align:center; padding:30px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:16px;">
-                <p style="color:var(--danger); margin-bottom:12px; font-weight:600;">Unable to load visiting drives from server.</p>
-                <button onclick="loadHomeVisitingCompanies()" class="btn btn-sm btn-secondary">🔄 Retry Loading</button>
+            <div style="grid-column:1 / -1; text-align:center; padding:35px 25px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:16px;">
+                <p style="color:var(--danger); font-size:16px; margin-bottom:8px; font-weight:700;">Unable to load visiting drives from server.</p>
+                <p style="color:var(--text-secondary); font-size:13px; max-width:550px; margin:0 auto 18px auto; line-height:1.5;">
+                    ${isFileProtocol
+                        ? 'You are viewing this page directly from disk via <code>file:///</code>. Browsers restrict API requests from local file protocols to local servers. Please open <strong>http://localhost:5000</strong> in your browser.'
+                        : 'Could not connect to the backend server. Please verify the server is running on port 5000 and try again.'}
+                </p>
+                <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
+                    <button onclick="loadHomeVisitingCompanies()" class="btn btn-sm btn-secondary">🔄 Retry Loading</button>
+                    ${isFileProtocol ? '<a href="http://localhost:5000" class="btn btn-sm btn-primary">🌐 Open via http://localhost:5000</a>' : ''}
+                </div>
             </div>
         `;
     }

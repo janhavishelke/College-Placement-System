@@ -28,29 +28,33 @@ const API_ROOT = window.PLACEMENT_API_BASE;
 // Universal robust fetch for visiting placement drives with multi-host fallbacks
 async function fetchVisitingPlacementDrives() {
     const isFile = typeof window !== 'undefined' && window.location && window.location.protocol === 'file:';
-    const hostname = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : 'localhost';
+    const rawHost = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : '';
+    const hostname = rawHost && rawHost.trim() !== '' ? rawHost : 'localhost';
     const port = typeof window !== 'undefined' && window.location ? window.location.port : '';
     const base = window.PLACEMENT_API_BASE || getPlacementApiBase();
 
     const candidates = [];
 
-    // 1. Primary direct endpoint via resolved base URL
-    candidates.push(`${base}/companies/visiting`);
-    candidates.push(`${base}/jobs`);
-
-    // 2. Relative paths if served by a web server
-    if (!isFile) {
+    // 1. Same-origin relative paths if served by backend on port 5000 or production (port 80/443)
+    if (!isFile && (!port || port === '5000' || port === '80' || port === '443')) {
         candidates.push('/api/companies/visiting');
         candidates.push('/api/jobs');
         candidates.push('/api/companies');
     }
 
-    // 3. Explicit dev server / localhost fallbacks
-    if (isFile || (port && port !== '5000' && port !== '80' && port !== '443')) {
-        candidates.push(`http://${hostname}:5000/api/companies/visiting`);
-        candidates.push(`http://127.0.0.1:5000/api/companies/visiting`);
-        candidates.push(`http://localhost:5000/api/companies/visiting`);
+    // 2. Primary direct endpoint via resolved base URL
+    if (base) {
+        candidates.push(`${base}/companies/visiting`);
+        candidates.push(`${base}/jobs`);
     }
+
+    // 3. Explicit localhost and IPv4 127.0.0.1 dev server candidates
+    candidates.push(`http://${hostname}:5000/api/companies/visiting`);
+    candidates.push('http://localhost:5000/api/companies/visiting');
+    candidates.push('http://127.0.0.1:5000/api/companies/visiting');
+    candidates.push(`http://${hostname}:5000/api/jobs`);
+    candidates.push('http://localhost:5000/api/jobs');
+    candidates.push('http://127.0.0.1:5000/api/jobs');
 
     const uniqueCandidates = [...new Set(candidates)];
     const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null;
@@ -76,12 +80,32 @@ async function fetchVisitingPlacementDrives() {
             const data = await res.json();
             const list = data.companies || data.visitingCompanies || data.jobs;
             if (data.success && Array.isArray(list)) {
+                // Cache to sessionStorage for instant offline/resilient restoration
+                try {
+                    if (typeof sessionStorage !== 'undefined') {
+                        sessionStorage.setItem('placement_visiting_drives_cache', JSON.stringify(list));
+                    }
+                } catch (_) {}
                 return { success: true, drives: list, sourceUrl: url };
             }
         } catch (e) {
             lastError = e;
         }
     }
+
+    // Resilience fallback: Return cached drives if available
+    try {
+        if (typeof sessionStorage !== 'undefined') {
+            const cached = sessionStorage.getItem('placement_visiting_drives_cache');
+            if (cached) {
+                const list = JSON.parse(cached);
+                if (Array.isArray(list) && list.length > 0) {
+                    return { success: true, drives: list, isCached: true };
+                }
+            }
+        }
+    } catch (_) {}
+
     throw lastError || new Error('Unable to connect to placement server.');
 }
 
