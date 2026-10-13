@@ -30,8 +30,26 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
             const card = document.querySelector('.readiness-card');
             if (card) card.insertBefore(banner, card.firstChild);
-        }
     }
+
+    // Prefill credentials if user was redirected from registration
+    try {
+        const prefillEmail = localStorage.getItem('registeredEmail');
+        const prefillRole = localStorage.getItem('registeredRole');
+        if (prefillEmail) {
+            const emailEl = document.getElementById('email');
+            if (emailEl) emailEl.value = prefillEmail;
+            localStorage.removeItem('registeredEmail');
+        }
+        if (prefillRole) {
+            const roleEl = document.getElementById('role');
+            if (roleEl) roleEl.value = prefillRole;
+            localStorage.removeItem('registeredRole');
+        }
+        if (prefillEmail) {
+            showMessage("Account created! Please enter your password to sign in.", "info");
+        }
+    } catch (_) {}
 });
 
 document

@@ -265,6 +265,16 @@ async function query(sql, params = []) {
             cols.forEach((col, idx) => {
                 newRecord[col] = params[idx] !== undefined ? params[idx] : null;
             });
+        if (tableName === 'users') {
+            if (newRecord.email) newRecord.email = newRecord.email.toLowerCase().trim();
+            if (newRecord.role === 'STUDENT') {
+                if (!newRecord.branch) newRecord.branch = 'Computer Engineering';
+                if (newRecord.cgpa === null || newRecord.cgpa === undefined) newRecord.cgpa = 8.0;
+                if (!newRecord.batch) newRecord.batch = '2026';
+                if (!newRecord.skills) newRecord.skills = 'Java, Python, Web Development';
+                if (!newRecord.interests) newRecord.interests = 'Software Engineering';
+            }
+            if (!newRecord.status) newRecord.status = 'Active';
         }
 
         tables[tableName].push(newRecord);

@@ -1,5 +1,26 @@
 const API_BASE = window.PLACEMENT_API_BASE || ((window.location.protocol === 'file:' || (window.location.port && window.location.port !== '5000')) ? 'http://localhost:5000/api' : '/api');
 
+// Display file protocol warning banner if loaded directly from disk
+document.addEventListener("DOMContentLoaded", () => {
+    if (window.location.protocol === 'file:') {
+        const main = document.querySelector('main');
+        if (main && !document.getElementById('fileWarningBanner')) {
+            const banner = document.createElement('div');
+            banner.id = 'fileWarningBanner';
+            banner.style.cssText = 'background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.3); border-radius:12px; padding:12px 16px; margin-bottom:16px; font-size:13px; text-align:center; color:var(--text-primary);';
+            banner.innerHTML = `
+                <div style="font-weight:700; color:var(--danger); margin-bottom:4px;">⚠️ Opened via file:/// scheme</div>
+                <div>Browsers block local network registrations from disk files. Open via localhost server:</div>
+                <div style="margin-top:8px;">
+                    <a href="http://localhost:5000/register.html" class="btn btn-sm btn-primary" style="display:inline-block; font-size:12px;">🌐 Open http://localhost:5000/register.html</a>
+                </div>
+            `;
+            const card = document.querySelector('.readiness-card');
+            if (card) card.insertBefore(banner, card.firstChild);
+        }
+    }
+});
+
 document
     .getElementById("registerForm")
     .addEventListener("submit", async function (event) {
@@ -23,7 +44,7 @@ document
         }
 
         submitBtn.disabled = true;
-        submitBtn.innerText = "Registering...";
+        submitBtn.innerText = "Creating Account...";
         showMessage("Creating your account...", "info");
 
         const isFile = typeof window !== 'undefined' && window.location && window.location.protocol === 'file:';
@@ -57,16 +78,22 @@ document
                 if (!response.ok || !data.success) {
                     showMessage(data.message || "Registration failed.", "error");
                     submitBtn.disabled = false;
-                    submitBtn.innerText = "Register";
+                    submitBtn.innerText = "Create Account";
                     return;
                 }
+
+                // Store registered details for automatic prefill on login
+                try {
+                    localStorage.setItem('registeredEmail', email);
+                    localStorage.setItem('registeredRole', role);
+                } catch (_) {}
 
                 showMessage("Registration successful! Redirecting to login...", "success");
                 successfulReg = true;
 
                 setTimeout(function () {
                     window.location.href = "login.html";
-                }, 1200);
+                }, 1000);
                 break;
             } catch (err) {
                 lastError = err;
@@ -81,12 +108,13 @@ document
                 showMessage("Could not connect to server. Ensure backend is running at http://localhost:5000.", "error");
             }
             submitBtn.disabled = false;
-            submitBtn.innerText = "Register";
+            submitBtn.innerText = "Create Account";
         }
     });
 
 function showMessage(message, type = "info") {
     const el = document.getElementById("registerMessage");
+    if (!el) return;
     el.innerText = message;
     if (type === "error") {
         el.style.color = "#dc2626";
