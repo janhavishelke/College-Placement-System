@@ -272,7 +272,7 @@ async function loadVisitingCompanies() {
                 renderVisitingDrivesList(allStudentVisitingDrives, profile);
             }
         } else {
-            throw new Error(jobsRes.message || 'Failed to retrieve visiting companies');
+            throw new Error('Failed to retrieve visiting companies from server');
         }
     } catch (e) {
         console.error("Error loading visiting companies:", e);

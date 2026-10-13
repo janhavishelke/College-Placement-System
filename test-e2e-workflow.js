@@ -60,13 +60,23 @@ async function runTests() {
     }
 
     try {
-        // 1. Health check
-        console.log('1. Testing System Health...');
+        // 1. Health check & Security Headers
+        console.log('1. Testing System Health & Security Headers...');
         const health = await request('GET', '/health');
         assert(health.status === 200 && health.body.status === 'UP', 'Health check is operational');
+        assert(health.headers['x-content-type-options'] === 'nosniff', 'Security Header: X-Content-Type-Options: nosniff enforced');
+        assert(health.headers['x-frame-options'] === 'SAMEORIGIN', 'Security Header: X-Frame-Options: SAMEORIGIN enforced');
 
-        // 2. Auth Tests for all 5 roles
-        console.log('\n2. Testing Authentication for all 5 roles...');
+        // 1b. Public Visiting Drives Retrieval
+        console.log('\n1b. Testing Visiting Placement Drives Retrieval...');
+        const visitingRes = await request('GET', '/companies/visiting');
+        assert(visitingRes.status === 200 && Array.isArray(visitingRes.body.companies), 'Public visiting drives loaded successfully');
+        assert(visitingRes.body.companies.length > 0, `Retrieved ${visitingRes.body.companies.length} active visiting placement drives`);
+        const sampleDrive = visitingRes.body.companies[0];
+        assert(Boolean(sampleDrive.company_name && sampleDrive.title && sampleDrive.salary), 'Visiting drive contains essential fields (company_name, title, salary)');
+
+        // 2. Auth Tests for all 5 roles & Security Defenses
+        console.log('\n2. Testing Authentication for all 5 roles & Security Controls...');
         const headLogin = await request('POST', '/auth/login', {
             email: 'tpo@placement.edu',
             password: 'Head@123',
@@ -104,6 +114,32 @@ async function runTests() {
             role: 'COMPANY'
         });
         assert(recruiterLogin.status === 200 && recruiterLogin.body.token, 'Recruiter login (tcs@placement.edu)');
+
+        // 2b. Privilege Escalation Defense
+        console.log('\n2b. Testing Privilege Escalation Defense...');
+        const adminRegAttempt = await request('POST', '/auth/register', {
+            name: 'Attacker Admin',
+            email: `hacker.${Date.now()}@domain.com`,
+            password: 'Password@123',
+            role: 'ADMIN'
+        });
+        assert(adminRegAttempt.status === 403, 'Privilege escalation rejected: Cannot self-register as ADMIN (HTTP 403)');
+
+        // 2c. Anti-Account Enumeration
+        console.log('\n2c. Testing Anti-Account Enumeration Defense...');
+        const badLogin = await request('POST', '/auth/login', {
+            email: 'nonexistent.user@placement.edu',
+            password: 'WrongPassword@123',
+            role: 'STUDENT'
+        });
+        assert(badLogin.status === 401 && badLogin.body.message === 'Invalid email, password, or role selection.', 'Anti-enumeration: Uniform error message for non-existent account');
+
+        const badPasswordLogin = await request('POST', '/auth/login', {
+            email: 'rahul@student.edu',
+            password: 'IncorrectPassword',
+            role: 'STUDENT'
+        });
+        assert(badPasswordLogin.status === 401 && badPasswordLogin.body.message === 'Invalid email, password, or role selection.', 'Anti-enumeration: Uniform error message for incorrect password');
 
         // 3. Coordinator Workload & Stats
         console.log('\n3. Testing Coordinator Workload & Stats...');
@@ -146,6 +182,26 @@ async function runTests() {
         const studentJobsAfter = await request('GET', '/jobs', null, studentToken);
         const isVisibleToStudentAfter = studentJobsAfter.body.jobs.some(j => j.id === driveId);
         assert(isVisibleToStudentAfter, 'Approved drive is immediately VISIBLE to students');
+
+        // 4b. Student CGPA Eligibility Gate Enforcement
+        console.log('\n4b. Testing Eligibility Enforcement (CGPA Cutoff)...');
+        const eliteDriveRes = await request('POST', '/jobs', {
+            companyName: `Elite Research Labs ${Date.now() % 10000}`,
+            jobTitle: 'Principal Research Scientist',
+            salary: '45 LPA',
+            skills: 'Deep Learning, Quantum Computing, PyTorch',
+            visitDate: '2026-12-01',
+            deadline: '2026-11-28',
+            minimumCgpa: 9.5, // Rahul has CGPA 8.7
+            maxBacklogs: 0,
+            eligibleBranches: 'Computer Engineering',
+            approvalStatus: 'Approved'
+        }, headToken);
+        assert(eliteDriveRes.status === 201 && eliteDriveRes.body.job, 'Placement Head created high-CGPA research drive');
+        const eliteDriveId = eliteDriveRes.body.job.id;
+
+        const ineligibleApply = await request('POST', '/applications', { jobId: eliteDriveId }, studentToken);
+        assert(ineligibleApply.status === 403 && ineligibleApply.body.message.includes('Eligibility criteria not met'), 'CGPA Gate: Ineligible student blocked from applying (HTTP 403)');
 
         // 5. Student Application & Candidate Progression
         console.log('\n5. Testing Application & Selection Round Progression...');

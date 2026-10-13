@@ -22,15 +22,29 @@ const analyticsRoutes = require('./routes/analytics.routes');
 const assistantRoutes = require('./routes/assistant.routes');
 
 // Placement Head & Coordinator Management routes
+// Institutional & Coordinator Management routes
 const coordinatorsRoutes = require('./routes/coordinators.routes');
 const announcementsRoutes = require('./routes/announcements.routes');
 const reportsRoutes = require('./routes/reports.routes');
 const auditRoutes = require('./routes/audit.routes');
 
+// Security & Rate Limiting Middleware
+const { apiLimiter, authLimiter } = require('./middleware/rateLimit');
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Enable advanced CORS & Private Network Access (PNA) for seamless dev server / file:// integration
+// Security Headers Middleware
+app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    next();
+});
+
+// Enable CORS & Private Network Access (PNA) for dev servers, file://, and production
 app.use((req, res, next) => {
     const origin = req.headers.origin || '*';
     res.setHeader('Access-Control-Allow-Origin', origin);
@@ -62,8 +76,12 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Enforce request size boundaries to protect against payload flood
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// Apply rate limiter to all API routes
+app.use('/api', apiLimiter);
 
 // Serve static frontend files from project root
 const publicDir = path.join(__dirname, '..');
@@ -74,8 +92,8 @@ app.get('/company-dashboard.html', (req, res) => {
     res.sendFile(path.join(publicDir, 'company.html'));
 });
 
-// Core API Routes
-app.use('/api/auth', authRoutes);
+// Core API Routes (authLimiter applied to sensitive auth endpoints)
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/jobs', jobsRoutes);
 app.use('/api/companies', companiesRoutes);
 app.use('/api/applications', applicationsRoutes);

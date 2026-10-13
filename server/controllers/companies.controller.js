@@ -29,6 +29,13 @@ exports.getVisitingCompanies = async (req, res) => {
             params.push(status.trim().toLowerCase());
         }
 
+        // Access control: Public visitors and students only see approved, unarchived drives
+        const isStaff = req.user && ['ADMIN', 'PLACEMENT_HEAD', 'COORDINATOR'].includes(req.user.role);
+        if (!isStaff) {
+            conditions.push(`(j.approval_status = 'Approved' OR j.approval_status IS NULL)`);
+            conditions.push(`(j.is_archived = 0 OR j.is_archived IS NULL)`);
+        }
+
         if (conditions.length > 0) {
             sql += ` WHERE ` + conditions.join(' AND ');
         }

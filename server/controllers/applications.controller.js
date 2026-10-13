@@ -19,6 +19,60 @@ exports.applyToJob = async (req, res) => {
             });
         }
 
+        // Validate drive approval status & archive state
+        if (job.approval_status && job.approval_status !== 'Approved') {
+            return res.status(400).json({
+                success: false,
+                message: 'This placement drive has not yet been approved for student applications.'
+            });
+        }
+        if (job.is_archived) {
+            return res.status(400).json({
+                success: false,
+                message: 'This placement drive is archived and is no longer accepting applications.'
+            });
+        }
+
+        // Validate application deadline
+        if (job.deadline) {
+            const deadlineDate = new Date(job.deadline);
+            const now = new Date();
+            // Allow submission until end of deadline day
+            deadlineDate.setHours(23, 59, 59, 999);
+            if (!isNaN(deadlineDate.getTime()) && deadlineDate.getTime() < now.getTime()) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'The deadline for this placement drive has passed.'
+                });
+            }
+        }
+
+        // Validate student eligibility (CGPA, Backlogs)
+        const student = await get('SELECT id, cgpa, backlogs, branch FROM users WHERE id = ?', [req.user.id]);
+        if (student) {
+            if (job.cgpa !== null && job.cgpa !== undefined && job.cgpa > 0) {
+                const studentCgpa = parseFloat(student.cgpa) || 0;
+                const minCgpa = parseFloat(job.cgpa);
+                if (studentCgpa < minCgpa) {
+                    return res.status(403).json({
+                        success: false,
+                        message: `Eligibility criteria not met: Required minimum CGPA is ${minCgpa}, but your recorded CGPA is ${studentCgpa}.`
+                    });
+                }
+            }
+
+            if (job.max_backlogs !== null && job.max_backlogs !== undefined) {
+                const studentBacklogs = parseInt(student.backlogs, 10) || 0;
+                const maxBacklogs = parseInt(job.max_backlogs, 10);
+                if (!isNaN(maxBacklogs) && studentBacklogs > maxBacklogs) {
+                    return res.status(403).json({
+                        success: false,
+                        message: `Eligibility criteria not met: Maximum allowed backlogs is ${maxBacklogs}, but you have ${studentBacklogs} active backlog(s).`
+                    });
+                }
+            }
+        }
+
         // Check if student already applied
         const existingApp = await get(
             'SELECT id, status FROM applications WHERE job_id = ? AND student_id = ?',
@@ -171,7 +225,7 @@ exports.updateApplicationStatus = async (req, res) => {
         }
 
         const application = await get(
-            `SELECT a.*, j.company_id, j.company_name, j.title, u.id as student_id, u.name as student_name
+            `SELECT a.*, j.company_id, j.company_name, j.title, j.coordinator_id, u.id as student_id, u.name as student_name
              FROM applications a 
              JOIN jobs j ON a.job_id = j.id 
              JOIN users u ON a.student_id = u.id
@@ -186,15 +240,15 @@ exports.updateApplicationStatus = async (req, res) => {
             });
         }
 
-        // Check permission: Admin, Placement Head, Coordinator, or Company owner
+        // Check permission: Admin, Placement Head, Assigned Coordinator, or Company owner
         const isHeadOrAdmin = req.user.role === 'ADMIN' || req.user.role === 'PLACEMENT_HEAD';
-        const isCoordinator = req.user.role === 'COORDINATOR';
+        const isCoordinator = req.user.role === 'COORDINATOR' && (!application.coordinator_id || application.coordinator_id === req.user.id);
         const isCompanyOwner = req.user.role === 'COMPANY' && application.company_id === req.user.id;
 
         if (!isHeadOrAdmin && !isCoordinator && !isCompanyOwner) {
             return res.status(403).json({
                 success: false,
-                message: 'You are not authorized to update applications for this job.'
+                message: 'You are not authorized to update applications for this placement drive.'
             });
         }
 

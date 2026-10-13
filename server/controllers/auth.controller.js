@@ -14,12 +14,14 @@ exports.register = async (req, res) => {
             });
         }
 
-        const validRoles = ['STUDENT', 'COMPANY', 'ADMIN', 'PLACEMENT_HEAD', 'COORDINATOR'];
+        // Public registration is restricted to STUDENT and COMPANY only.
+        // Administrative roles (ADMIN, PLACEMENT_HEAD, COORDINATOR) must be created by administrators.
+        const allowedPublicRoles = ['STUDENT', 'COMPANY'];
         const normalizedRole = role.toUpperCase();
-        if (!validRoles.includes(normalizedRole)) {
-            return res.status(400).json({
+        if (!allowedPublicRoles.includes(normalizedRole)) {
+            return res.status(403).json({
                 success: false,
-                message: 'Invalid role. Must be STUDENT, COMPANY, COORDINATOR, PLACEMENT_HEAD, or ADMIN.'
+                message: 'Public self-registration is only permitted for STUDENT and COMPANY roles. Institutional roles must be provisioned by the Placement Office.'
             });
         }
 
@@ -81,7 +83,7 @@ exports.login = async (req, res) => {
         if (!user) {
             return res.status(401).json({
                 success: false,
-                message: 'Invalid email or password.'
+                message: 'Invalid email, password, or role selection.'
             });
         }
 
@@ -89,7 +91,7 @@ exports.login = async (req, res) => {
         if (!isMatch) {
             return res.status(401).json({
                 success: false,
-                message: 'Invalid email or password.'
+                message: 'Invalid email, password, or role selection.'
             });
         }
 
@@ -99,9 +101,9 @@ exports.login = async (req, res) => {
             (normalizedRole === 'PLACEMENT_HEAD' && user.role === 'ADMIN');
 
         if (!isRoleMatch) {
-            return res.status(403).json({
+            return res.status(401).json({
                 success: false,
-                message: `Account found, but role does not match. This email is registered as ${user.role}.`
+                message: 'Invalid email, password, or role selection.'
             });
         }
 

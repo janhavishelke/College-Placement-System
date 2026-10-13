@@ -12,15 +12,15 @@ function getPlacementApiBase() {
             return 'http://127.0.0.1:5000/api';
         }
 
-        // If served from backend server on port 5000
-        if (port === '5000') {
-            return '/api';
+        // If served from a frontend dev server with alternate port (e.g. Live Server 5500, Vite 5173, Webpack 3000)
+        if (port && port !== '5000' && port !== '80' && port !== '443') {
+            return `http://${hostname}:5000/api`;
         }
 
-        // If served from a frontend dev server (e.g. Live Server on port 5500, 3000, 8080)
-        return `http://${hostname}:5000/api`;
+        // Same-origin relative path for backend server on port 5000, port 80/443, or production domain
+        return '/api';
     }
-    return 'http://127.0.0.1:5000/api';
+    return '/api';
 }
 window.PLACEMENT_API_BASE = getPlacementApiBase();
 const API_ROOT = window.PLACEMENT_API_BASE;
@@ -30,33 +30,27 @@ async function fetchVisitingPlacementDrives() {
     const isFile = typeof window !== 'undefined' && window.location && window.location.protocol === 'file:';
     const hostname = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : 'localhost';
     const port = typeof window !== 'undefined' && window.location ? window.location.port : '';
+    const base = window.PLACEMENT_API_BASE || getPlacementApiBase();
 
     const candidates = [];
 
-    // Same-origin relative paths if served on port 5000
-    if (!isFile && port === '5000') {
+    // 1. Primary direct endpoint via resolved base URL
+    candidates.push(`${base}/companies/visiting`);
+    candidates.push(`${base}/jobs`);
+
+    // 2. Relative paths if served by a web server
+    if (!isFile) {
         candidates.push('/api/companies/visiting');
-        candidates.push('/api/companies');
         candidates.push('/api/jobs');
+        candidates.push('/api/companies');
     }
 
-    // Current hostname on port 5000
-    if (hostname) {
+    // 3. Explicit dev server / localhost fallbacks
+    if (isFile || (port && port !== '5000' && port !== '80' && port !== '443')) {
         candidates.push(`http://${hostname}:5000/api/companies/visiting`);
-        candidates.push(`http://${hostname}:5000/api/companies`);
-        candidates.push(`http://${hostname}:5000/api/jobs`);
+        candidates.push(`http://127.0.0.1:5000/api/companies/visiting`);
+        candidates.push(`http://localhost:5000/api/companies/visiting`);
     }
-
-    // 127.0.0.1 and localhost explicit fallbacks
-    candidates.push('http://127.0.0.1:5000/api/companies/visiting');
-    candidates.push('http://127.0.0.1:5000/api/companies');
-    candidates.push('http://127.0.0.1:5000/api/jobs');
-    candidates.push('http://localhost:5000/api/companies/visiting');
-    candidates.push('http://localhost:5000/api/companies');
-    candidates.push('http://localhost:5000/api/jobs');
-    candidates.push('/api/companies/visiting');
-    candidates.push('/api/companies');
-    candidates.push('/api/jobs');
 
     const uniqueCandidates = [...new Set(candidates)];
     const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null;
@@ -67,7 +61,7 @@ async function fetchVisitingPlacementDrives() {
     for (const url of uniqueCandidates) {
         try {
             const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-            const timer = controller ? setTimeout(() => controller.abort(), 4000) : null;
+            const timer = controller ? setTimeout(() => controller.abort(), 2500) : null;
             const res = await fetch(url, {
                 method: 'GET',
                 headers,
