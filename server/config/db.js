@@ -1,4 +1,8 @@
-const sqlite3 = require('sqlite3').verbose();
+let sqlite3 = null;
+let sqliteAvailable = false;
+let db = null;
+let inMem = null;
+
 const path = require('path');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
@@ -7,60 +11,91 @@ const isVercel = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_N
 let dbDir = path.join(__dirname, '..', 'data');
 let dbPath = path.join(dbDir, 'placement.db');
 
-if (isVercel) {
-    dbDir = '/tmp';
-    const tmpDbPath = path.join('/tmp', 'placement.db');
-    try {
-        if (!fs.existsSync(tmpDbPath) && fs.existsSync(dbPath)) {
-            fs.copyFileSync(dbPath, tmpDbPath);
-        }
-    } catch (e) {
-        console.warn('Serverless db copy notice:', e.message);
-    }
-    dbPath = tmpDbPath;
-} else {
-    if (!fs.existsSync(dbDir)) {
+try {
+    sqlite3 = require('sqlite3').verbose();
+    if (isVercel) {
+        dbDir = '/tmp';
+        const tmpDbPath = path.join('/tmp', 'placement.db');
         try {
-            fs.mkdirSync(dbDir, { recursive: true });
-        } catch (_) {}
+            if (!fs.existsSync(tmpDbPath) && fs.existsSync(dbPath)) {
+                fs.copyFileSync(dbPath, tmpDbPath);
+            }
+        } catch (e) {
+            console.warn('Serverless db copy notice:', e.message);
+        }
+        dbPath = tmpDbPath;
+    } else {
+        if (!fs.existsSync(dbDir)) {
+            try {
+                fs.mkdirSync(dbDir, { recursive: true });
+            } catch (_) {}
+        }
     }
+
+    db = new sqlite3.Database(dbPath, (err) => {
+        if (err) {
+            console.warn('SQLite connection error, falling back to resilient in-memory store:', err.message);
+            sqliteAvailable = false;
+        } else {
+            sqliteAvailable = true;
+            console.log(`Connected to SQLite database at ${dbPath}`);
+        }
+    });
+    sqliteAvailable = true;
+    db.run('PRAGMA foreign_keys = ON');
+} catch (e) {
+    console.warn('Native sqlite3 module not available in this environment (e.g. serverless). Using in-memory fallback:', e.message);
+    sqliteAvailable = false;
 }
 
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('Failed to connect to SQLite database:', err.message);
-    } else {
-        console.log(`Connected to SQLite database at ${dbPath}`);
-    }
-});
+function getInMem() {
+    if (!inMem) inMem = require('./inMemoryDb');
+    return inMem;
+}
 
-// Enable foreign keys
-db.run('PRAGMA foreign_keys = ON');
-
-// Promisified helper methods
+// Promisified helper methods with automatic in-memory fallback
 const query = (sql, params = []) => {
+    if (!sqliteAvailable || !db) {
+        return getInMem().query(sql, params);
+    }
     return new Promise((resolve, reject) => {
         db.all(sql, params, (err, rows) => {
-            if (err) reject(err);
-            else resolve(rows);
+            if (err) {
+                // If sqlite fails at runtime (e.g. missing binary or file access error), fallback to in-memory
+                getInMem().query(sql, params).then(resolve).catch(reject);
+            } else {
+                resolve(rows);
+            }
         });
     });
 };
 
 const get = (sql, params = []) => {
+    if (!sqliteAvailable || !db) {
+        return getInMem().get(sql, params);
+    }
     return new Promise((resolve, reject) => {
         db.get(sql, params, (err, row) => {
-            if (err) reject(err);
-            else resolve(row || null);
+            if (err) {
+                getInMem().get(sql, params).then(resolve).catch(reject);
+            } else {
+                resolve(row || null);
+            }
         });
     });
 };
 
 const run = (sql, params = []) => {
+    if (!sqliteAvailable || !db) {
+        return getInMem().run(sql, params);
+    }
     return new Promise((resolve, reject) => {
         db.run(sql, params, function (err) {
-            if (err) reject(err);
-            else resolve({ lastID: this.lastID, changes: this.changes });
+            if (err) {
+                getInMem().run(sql, params).then(resolve).catch(reject);
+            } else {
+                resolve({ lastID: this.lastID, changes: this.changes });
+            }
         });
     });
 };
@@ -80,9 +115,13 @@ async function ensureColumn(table, column, definition) {
 
 // Initialize schema and seed default data
 async function initDatabase() {
-    // 1. Core tables
-    await run(`
-        CREATE TABLE IF NOT EXISTS users (
+    if (!sqliteAvailable || !db) {
+        return getInMem().initDatabase();
+    }
+    try {
+        // 1. Core tables
+        await run(`
+            CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             email TEXT UNIQUE NOT NULL COLLATE NOCASE,
@@ -1109,6 +1148,11 @@ async function initDatabase() {
     }
 
     console.log('Database schema and rich test data initialized successfully.');
+    } catch (err) {
+        console.warn('SQLite initDatabase failed, falling back to in-memory store:', err.message);
+        sqliteAvailable = false;
+        return getInMem().initDatabase();
+    }
 }
 
 module.exports = {

@@ -26,33 +26,60 @@ document
         submitBtn.innerText = "Registering...";
         showMessage("Creating your account...", "info");
 
-        try {
-            const response = await fetch(`${API_BASE}/auth/register`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ name, email, password, role })
-            });
+        const isFile = typeof window !== 'undefined' && window.location && window.location.protocol === 'file:';
+        const port = typeof window !== 'undefined' && window.location ? window.location.port : '';
+        const base = window.PLACEMENT_API_BASE || ((isFile || (port && port !== '5000')) ? 'http://localhost:5000/api' : '/api');
+        
+        const candidates = [];
+        if (!isFile) candidates.push('/api/auth/register');
+        candidates.push(`${base}/auth/register`);
+        candidates.push('http://localhost:5000/api/auth/register');
+        candidates.push('http://127.0.0.1:5000/api/auth/register');
 
-            const data = await response.json();
+        let lastError = null;
+        let successfulReg = false;
 
-            if (!response.ok || !data.success) {
-                showMessage(data.message || "Registration failed.", "error");
-                submitBtn.disabled = false;
-                submitBtn.innerText = "Register";
-                return;
+        for (const url of [...new Set(candidates)]) {
+            try {
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ name, email, password, role })
+                });
+
+                const contentType = response.headers.get("content-type") || "";
+                if (!contentType.includes("application/json")) continue;
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    showMessage(data.message || "Registration failed.", "error");
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "Register";
+                    return;
+                }
+
+                showMessage("Registration successful! Redirecting to login...", "success");
+                successfulReg = true;
+
+                setTimeout(function () {
+                    window.location.href = "login.html";
+                }, 1200);
+                break;
+            } catch (err) {
+                lastError = err;
             }
+        }
 
-            showMessage("Registration successful! Redirecting to login...", "success");
-
-            setTimeout(function () {
-                window.location.href = "login.html";
-            }, 1200);
-
-        } catch (err) {
-            console.error("Register error:", err);
-            showMessage("Could not connect to server. Ensure backend is running.", "error");
+        if (!successfulReg) {
+            console.error("Register error:", lastError);
+            if (isFile) {
+                showMessage("Browsers block requests from file://. Please open http://localhost:5000/register.html in your browser URL bar.", "error");
+            } else {
+                showMessage("Could not connect to server. Ensure backend is running at http://localhost:5000.", "error");
+            }
             submitBtn.disabled = false;
             submitBtn.innerText = "Register";
         }
