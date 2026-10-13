@@ -3,12 +3,29 @@ const path = require('path');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
 
-const dbDir = path.join(__dirname, '..', 'data');
-if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
+const isVercel = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+let dbDir = path.join(__dirname, '..', 'data');
+let dbPath = path.join(dbDir, 'placement.db');
+
+if (isVercel) {
+    dbDir = '/tmp';
+    const tmpDbPath = path.join('/tmp', 'placement.db');
+    try {
+        if (!fs.existsSync(tmpDbPath) && fs.existsSync(dbPath)) {
+            fs.copyFileSync(dbPath, tmpDbPath);
+        }
+    } catch (e) {
+        console.warn('Serverless db copy notice:', e.message);
+    }
+    dbPath = tmpDbPath;
+} else {
+    if (!fs.existsSync(dbDir)) {
+        try {
+            fs.mkdirSync(dbDir, { recursive: true });
+        } catch (_) {}
+    }
 }
 
-const dbPath = path.join(dbDir, 'placement.db');
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Failed to connect to SQLite database:', err.message);

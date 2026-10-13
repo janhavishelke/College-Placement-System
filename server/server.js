@@ -143,17 +143,26 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Initialize DB schema & seeds, then start server
-initDatabase().then(() => {
-    app.listen(PORT, '0.0.0.0', () => {
-        console.log(`=================================================`);
-        console.log(`🎓 PlacementHub Advanced Backend Server is running!`);
-        console.log(`🌐 Local URL:  http://localhost:${PORT}`);
-        console.log(`🌐 IPv4 URL:   http://127.0.0.1:${PORT}`);
-        console.log(`📡 API URL:    http://localhost:${PORT}/api/health`);
-        console.log(`=================================================`);
+// Initialize DB schema & seeds, then start server if run directly
+if (require.main === module) {
+    initDatabase().then(() => {
+        app.listen(PORT, '0.0.0.0', () => {
+            console.log(`=================================================`);
+            console.log(`🎓 PlacementHub Advanced Backend Server is running!`);
+            console.log(`🌐 Local URL:  http://localhost:${PORT}`);
+            console.log(`🌐 IPv4 URL:   http://127.0.0.1:${PORT}`);
+            console.log(`📡 API URL:    http://localhost:${PORT}/api/health`);
+            console.log(`=================================================`);
+        });
+    }).catch(err => {
+        console.error('Failed to initialize database:', err);
+        process.exit(1);
     });
-}).catch(err => {
-    console.error('Failed to initialize database:', err);
-    process.exit(1);
-});
+} else {
+    // When imported by serverless functions (e.g. Vercel)
+    initDatabase().catch(err => {
+        console.warn('Database initialization notice:', err.message);
+    });
+}
+
+module.exports = app;
