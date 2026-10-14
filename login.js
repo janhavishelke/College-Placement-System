@@ -30,6 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
             const card = document.querySelector('.readiness-card');
             if (card) card.insertBefore(banner, card.firstChild);
+        }
     }
 
     // Prefill credentials if user was redirected from registration

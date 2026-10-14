@@ -566,10 +566,12 @@ exports.getReadinessDashboard = async (req, res) => {
             [studentId]
         );
 
-        if (codingSolved.count >= 2) {
+        const solvedCount = (codingSolved && codingSolved.count) ? Number(codingSolved.count) : 0;
+
+        if (solvedCount >= 2) {
             codingInterviewScore += 10;
-            profileItems.push({ label: `Solved Coding Challenges (${codingSolved.count} solved)`, points: 10, completed: true });
-        } else if (codingSolved.count === 1) {
+            profileItems.push({ label: `Solved Coding Challenges (${solvedCount} solved)`, points: 10, completed: true });
+        } else if (solvedCount === 1) {
             codingInterviewScore += 5;
             profileItems.push({ label: 'Solve at least 2 Coding Practice Challenges', points: 5, completed: false });
         } else {

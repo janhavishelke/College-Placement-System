@@ -84,11 +84,13 @@ async function query(sql, params = []) {
         const sourceTable = tables[tableName] || [];
 
         // Handle COUNT queries like SELECT COUNT(*) as count FROM <table>
-        if (cSql.match(/SELECT\s+COUNT\(\*\)\s+as\s+count\s+FROM/i)) {
+        if (cSql.match(/SELECT\s+COUNT\(/i)) {
             // Check for simple WHERE filters
             let filtered = sourceTable;
             if (cSql.match(/WHERE\s+user_id\s*=\s*\?/i) && params.length > 0) {
                 filtered = sourceTable.filter(r => r.user_id == params[0]);
+            } else if (cSql.match(/WHERE\s+student_id\s*=\s*\?/i) && params.length > 0) {
+                filtered = sourceTable.filter(r => r.student_id == params[0]);
             }
             return [{ count: filtered.length }];
         }
@@ -170,45 +172,45 @@ async function query(sql, params = []) {
         if (cSql.includes('WHERE')) {
             let pIdx = 0;
 
-            if (cSql.includes('email = ?') || cSql.includes('EMAIL = ?')) {
+            if (cSql.match(/(\b|[a-z_]+\.)email\s*=\s*\?/i)) {
                 const emailParam = (params[pIdx] || '').toLowerCase().trim();
                 results = results.filter(r => (r.email || '').toLowerCase().trim() === emailParam);
                 pIdx++;
             }
 
-            if (cSql.includes('id = ?')) {
-                const idParam = params[pIdx];
-                results = results.filter(r => r.id == idParam);
-                pIdx++;
-            }
-
-            if (cSql.includes('student_id = ?')) {
+            if (cSql.match(/(\b|[a-z_]+\.)student_id\s*=\s*\?/i)) {
                 const sParam = params[pIdx];
                 results = results.filter(r => r.student_id == sParam);
                 pIdx++;
             }
 
-            if (cSql.includes('job_id = ?')) {
+            if (cSql.match(/(\b|[a-z_]+\.)job_id\s*=\s*\?/i)) {
                 const jParam = params[pIdx];
                 results = results.filter(r => r.job_id == jParam);
                 pIdx++;
             }
 
-            if (cSql.includes('user_id = ?')) {
+            if (cSql.match(/(\b|[a-z_]+\.)user_id\s*=\s*\?/i)) {
                 const uParam = params[pIdx];
                 results = results.filter(r => r.user_id == uParam);
                 pIdx++;
             }
 
-            if (cSql.includes('role = ?')) {
+            if (cSql.match(/(\b|[a-z_]+\.)role\s*=\s*\?/i)) {
                 const rParam = params[pIdx];
                 results = results.filter(r => r.role === rParam);
                 pIdx++;
             }
 
-            if (cSql.includes('application_id = ?')) {
+            if (cSql.match(/(\b|[a-z_]+\.)application_id\s*=\s*\?/i)) {
                 const apParam = params[pIdx];
                 results = results.filter(r => r.application_id == apParam);
+                pIdx++;
+            }
+
+            if (cSql.match(/(\b|[a-z_]+\.)id\s*=\s*\?/i) && !cSql.match(/student_id|job_id|user_id|application_id/i)) {
+                const idParam = params[pIdx];
+                results = results.filter(r => r.id == idParam);
                 pIdx++;
             }
         }
@@ -221,13 +223,18 @@ async function query(sql, params = []) {
                 return {
                     ...app,
                     title: job.title || '',
+                    job_title: job.title || '',
+                    company: job.company_name || '',
                     company_name: job.company_name || '',
                     location: job.location || '',
                     salary: job.salary || '',
+                    cgpa: job.cgpa || 0,
+                    min_cgpa: job.cgpa || 0,
+                    deadline: job.deadline || '',
                     student_name: student.name || '',
                     student_email: student.email || '',
                     branch: student.branch || '',
-                    cgpa: student.cgpa || 0
+                    student_cgpa: student.cgpa || 0
                 };
             });
         }
@@ -265,6 +272,8 @@ async function query(sql, params = []) {
             cols.forEach((col, idx) => {
                 newRecord[col] = params[idx] !== undefined ? params[idx] : null;
             });
+        }
+
         if (tableName === 'users') {
             if (newRecord.email) newRecord.email = newRecord.email.toLowerCase().trim();
             if (newRecord.role === 'STUDENT') {
