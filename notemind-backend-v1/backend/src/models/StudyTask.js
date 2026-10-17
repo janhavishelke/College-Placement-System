@@ -1,0 +1,3 @@
+const mongoose=require('mongoose');
+const s=new mongoose.Schema({userId:{type:mongoose.Schema.Types.ObjectId,ref:'User',required:true,index:true},title:{type:String,required:true},subject:{type:String,default:''},dueDate:{type:Date},estimatedDuration:{type:Number,default:30},status:{type:String,enum:['todo','in-progress','done','postponed'],default:'todo'},postponeCount:{type:Number,default:0},reminderSettings:{type:mongoose.Schema.Types.Mixed,default:{alertsEnabled:true,frequency:'daily'}},plannedDuration:{type:Number,default:30},actualDuration:{type:Number,default:0},createdAt:{type:Date,default:Date.now}});
+s.index({userId:1,dueDate:1}); module.exports=mongoose.model('StudyTask',s);

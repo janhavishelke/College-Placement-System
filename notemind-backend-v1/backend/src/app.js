@@ -1,0 +1,14 @@
+const express=require('express'); const cors=require('cors'); const env=require('./config/environment');
+const app=express();
+app.use(cors({origin:true,credentials:true})); app.use(express.json({limit:'10mb'})); app.use(express.urlencoded({extended:true}));
+app.get('/api/health',(req,res)=>res.json({ok:true,service:'NoteMind AI',port:env.PORT}));
+app.use('/api/auth',require('./routes/auth.routes')); app.use('/api/users',require('./routes/users.routes'));
+app.use('/api/documents',require('./routes/documents.routes')); app.use('/api/tutor',require('./routes/tutor.routes'));
+app.use('/api/quizzes',require('./routes/quizzes.routes')); app.use('/api/learning-sessions',require('./routes/learning-sessions.routes'));
+app.use('/api/peers',require('./routes/study-partners.routes')); app.use('/api/peer-requests',require('./routes/peer-requests.routes'));
+app.use('/api/study-groups',require('./routes/study-groups.routes')); app.use('/api/tasks',require('./routes/tasks.routes'));
+app.use('/api/wellbeing',require('./routes/wellbeing.routes')); app.use('/api/revisions',require('./routes/revisions.routes'));
+app.use('/api/dashboard',require('./routes/dashboard.routes')); app.use('/api/unera',require('./routes/unera.routes'));
+app.use((req,res)=>res.status(404).json({error:'Not found'}));
+app.use(require('./middleware/error.middleware'));
+module.exports=app;

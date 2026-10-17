@@ -1,0 +1,429 @@
+{
+  "users": [
+    {
+      "id": "demo-user-1",
+      "name": "Alex Rivera",
+      "email": "alex.rivera@university.edu",
+      "role": "student",
+      "major": "Computer Science & Engineering",
+      "year": "Junior (3rd Year)",
+      "isDemo": true
+    }
+  ],
+  "documents": [
+    {
+      "id": "doc-os-concurrency-301",
+      "userId": "demo-user-1",
+      "title": "CS301: Concurrency, Deadlocks & Virtual Memory.pdf",
+      "fileType": "pdf",
+      "fileSize": "2.4 MB",
+      "pageCount": 4,
+      "chunkCount": 8,
+      "status": "ready",
+      "uploadedAt": "2026-10-14T05:18:02.855Z",
+      "summary": "University lecture notes covering critical sections, Peterson algorithm, semaphores, Coffman deadlock conditions, Banker algorithm, and LRU page replacement."
+    },
+    {
+      "id": "doc-algo-recursion-201",
+      "userId": "demo-user-1",
+      "title": "CS201: Recursion Dynamics & Dynamic Programming.pdf",
+      "fileType": "pdf",
+      "fileSize": "1.8 MB",
+      "pageCount": 3,
+      "chunkCount": 6,
+      "status": "ready",
+      "uploadedAt": "2026-10-12T05:18:02.855Z",
+      "summary": "Comprehensive notes detailing stack activation records, base case design, memoization vs bottom-up tabulation, and the 0/1 Knapsack formulation."
+    },
+    {
+      "id": "doc-ml-deeplearning-401",
+      "userId": "demo-user-1",
+      "title": "CS401: Deep Learning Foundations & Backpropagation.pdf",
+      "fileType": "pdf",
+      "fileSize": "3.1 MB",
+      "pageCount": 3,
+      "chunkCount": 6,
+      "status": "ready",
+      "uploadedAt": "2026-10-10T05:18:02.855Z",
+      "summary": "Foundational guide to neural network architectures, activation non-linearities, loss surfaces, computational graphs, and chain rule backpropagation."
+    }
+  ],
+  "chunks": [
+    {
+      "id": "chunk-os-1",
+      "documentId": "doc-os-concurrency-301",
+      "documentName": "CS301: Concurrency, Deadlocks & Virtual Memory.pdf",
+      "pageNumber": 1,
+      "title": "The Critical Section Problem & Peterson's Solution",
+      "text": "A critical section is a piece of code that accesses shared resources (like shared memory or files) and must not be concurrently executed by more than one process. Any valid solution to the critical section problem must satisfy three criteria: 1) Mutual Exclusion: If process Pi is executing in its critical section, then no other processes can be executing in their critical sections. 2) Progress: If no process is executing in its critical section and some processes wish to enter, only those processes that are not in their remainder section can participate in deciding who enters next. 3) Bounded Waiting: There must be a bound or limit on the number of times other processes are allowed to enter their critical sections after a process has made a request to enter. Peterson's solution solves this for two processes using shared variables \"turn\" and \"flag[2]\".",
+      "keywords": [
+        "critical section",
+        "mutual exclusion",
+        "progress",
+        "bounded waiting",
+        "peterson",
+        "concurrency",
+        "race condition"
+      ]
+    },
+    {
+      "id": "chunk-os-2",
+      "documentId": "doc-os-concurrency-301",
+      "documentName": "CS301: Concurrency, Deadlocks & Virtual Memory.pdf",
+      "pageNumber": 2,
+      "title": "Semaphores & Mutex Locks in Process Synchronization",
+      "text": "A Semaphore is a synchronization tool provided by the OS. It is an integer variable accessed only through two standard atomic operations: wait() [historically called P()] and signal() [historically called V()]. In wait(S), while S <= 0, process blocks; then S--. In signal(S), S++ and a waiting process is awakened. Counting semaphores have an unrestricted domain and are used to control access to a finite number of resource instances. Binary semaphores take values between 0 and 1 only, functioning identically to a Mutex (Mutual Exclusion lock). In the Classic Producer-Consumer Problem, three semaphores are used: \"mutex\" initialized to 1 for buffer access, \"empty\" initialized to N (buffer capacity), and \"full\" initialized to 0.",
+      "keywords": [
+        "semaphore",
+        "mutex",
+        "wait",
+        "signal",
+        "producer-consumer",
+        "atomic",
+        "counting semaphore",
+        "binary semaphore"
+      ]
+    },
+    {
+      "id": "chunk-os-3",
+      "documentId": "doc-os-concurrency-301",
+      "documentName": "CS301: Concurrency, Deadlocks & Virtual Memory.pdf",
+      "pageNumber": 3,
+      "title": "Deadlocks and the Four Coffman Conditions",
+      "text": "A deadlock is a situation where a set of processes are blocked because each process is holding a resource and waiting for another resource acquired by some other process. A deadlock can arise if and only if all four Coffman conditions hold simultaneously: 1. Mutual Exclusion: At least one resource must be held in a non-shareable mode. 2. Hold and Wait: A process must be currently holding at least one resource and requesting additional resources held by other processes. 3. No Preemption: Resources cannot be forcibly preempted; a resource can be released only voluntarily by the holding process after completing its task. 4. Circular Wait: A closed chain of processes exists such that each process holds at least one resource needed by the next process in the chain (P0 waits for P1, P1 for P2... Pn for P0). To prevent deadlocks, the operating system must invalidate at least one of these four conditions.",
+      "keywords": [
+        "deadlock",
+        "coffman conditions",
+        "mutual exclusion",
+        "hold and wait",
+        "no preemption",
+        "circular wait",
+        "banker algorithm",
+        "resource allocation graph"
+      ]
+    },
+    {
+      "id": "chunk-os-4",
+      "documentId": "doc-os-concurrency-301",
+      "documentName": "CS301: Concurrency, Deadlocks & Virtual Memory.pdf",
+      "pageNumber": 4,
+      "title": "Virtual Memory, Demand Paging & Page Replacement Algorithms",
+      "text": "Virtual memory separates user logical memory from physical memory. Demand paging brings a page into physical memory only when it is referenced during execution. A Page Fault trap occurs when the process attempts to access a page marked invalid in the page table. When physical memory is full, the OS invokes a Page Replacement Algorithm. Belady's Anomaly is the phenomenon where allocating more physical page frames causes MORE page faults, occurring in FIFO (First-In, First-Out) replacement. In contrast, Optimal Page Replacement (replace the page that will not be used for the longest period in the future) has the lowest possible page fault rate but is impossible to implement without future knowledge. Least Recently Used (LRU) associates each page with the time of its last use, replacing the page that has not been used for the longest time.",
+      "keywords": [
+        "virtual memory",
+        "demand paging",
+        "page fault",
+        "page replacement",
+        "belady anomaly",
+        "lru",
+        "fifo",
+        "thrashing",
+        "tlb"
+      ]
+    },
+    {
+      "id": "chunk-algo-1",
+      "documentId": "doc-algo-recursion-201",
+      "documentName": "CS201: Recursion Dynamics & Dynamic Programming.pdf",
+      "pageNumber": 1,
+      "title": "Call Stack Frames & Recursion Mechanics",
+      "text": "Every recursive call pushes a new Activation Record (stack frame) onto the Call Stack. An activation record contains local variables, formal parameters, and the return address to the caller. A recursion must have two mandatory components: 1) One or more Base Cases, which provide terminating conditions without further recursive invocations. 2) Recursive Steps, which reduce the original problem towards the base case. If a recursive function fails to hit a base case or branches infinitely, the call stack exceeds its allocated memory limit, triggering a Stack Overflow. Tail Recursion occurs when the recursive call is the absolute final statement executed before returning, enabling compiler tail-call optimization to reuse the current stack frame.",
+      "keywords": [
+        "recursion",
+        "call stack",
+        "activation record",
+        "stack frame",
+        "base case",
+        "stack overflow",
+        "tail recursion"
+      ]
+    },
+    {
+      "id": "chunk-algo-2",
+      "documentId": "doc-algo-recursion-201",
+      "documentName": "CS201: Recursion Dynamics & Dynamic Programming.pdf",
+      "pageNumber": 2,
+      "title": "Dynamic Programming: Memoization vs Tabulation",
+      "text": "Dynamic Programming (DP) is applicable when a problem exhibits two critical properties: 1) Optimal Substructure: The optimal solution to the problem can be constructed from optimal solutions to its subproblems. 2) Overlapping Subproblems: The recursive algorithm visits the same subproblems repeatedly rather than generating new subproblems. There are two primary paradigms: Top-Down DP with Memoization stores the results of function calls in a cache/hash table upon return, preserving the intuitive recursive tree. Bottom-Up DP with Tabulation systematically builds solutions from the base cases upward in an iterative table, eliminating call stack overhead entirely and frequently enabling space optimization (reducing O(N) space to O(1) by storing only previous states).",
+      "keywords": [
+        "dynamic programming",
+        "memoization",
+        "tabulation",
+        "optimal substructure",
+        "overlapping subproblems",
+        "top-down",
+        "bottom-up",
+        "space optimization"
+      ]
+    },
+    {
+      "id": "chunk-algo-3",
+      "documentId": "doc-algo-recursion-201",
+      "documentName": "CS201: Recursion Dynamics & Dynamic Programming.pdf",
+      "pageNumber": 3,
+      "title": "The 0/1 Knapsack Problem Formulation",
+      "text": "In the 0/1 Knapsack problem, given N items each with weight w[i] and value v[i], and a maximum knapsack capacity W, determine the maximum total value attainable such that total weight <= W. The \"0/1\" constraint specifies that each item can either be included (1) or excluded (0) in its entirety; items cannot be fractional. The recurrence relation is: dp[i][w] = dp[i-1][w] if w[i-1] > w. Otherwise, dp[i][w] = max(dp[i-1][w], v[i-1] + dp[i-1][w - w[i-1]]). The time complexity is O(N * W), which is pseudo-polynomial because W depends on the numeric value of the input rather than just the number of bits.",
+      "keywords": [
+        "knapsack",
+        "0/1 knapsack",
+        "dynamic programming",
+        "recurrence relation",
+        "pseudo-polynomial",
+        "time complexity"
+      ]
+    },
+    {
+      "id": "chunk-ml-1",
+      "documentId": "doc-ml-deeplearning-401",
+      "documentName": "CS401: Deep Learning Foundations & Backpropagation.pdf",
+      "pageNumber": 1,
+      "title": "Artificial Neurons & Activation Functions",
+      "text": "An artificial neuron computes the weighted sum of inputs plus a bias term: z = sum(w_i * x_i) + b, followed by applying a non-linear activation function: a = f(z). Without non-linear activation functions, any deep multi-layer neural network collapses mathematically into an equivalent single-layer linear model. Common activations include: 1) Sigmoid: sigma(z) = 1 / (1 + e^-z), squashes values between (0, 1), but suffers from vanishing gradients when |z| is large. 2) ReLU (Rectified Linear Unit): f(z) = max(0, z), computationally efficient and mitigates vanishing gradients for positive inputs, though can suffer from \"Dying ReLU\" when neurons output 0 permanently. 3) Leaky ReLU: f(z) = max(alpha * z, z), provides a small positive slope alpha for z < 0.",
+      "keywords": [
+        "neuron",
+        "activation function",
+        "sigmoid",
+        "relu",
+        "leaky relu",
+        "vanishing gradient",
+        "non-linearity",
+        "bias",
+        "weights"
+      ]
+    },
+    {
+      "id": "chunk-ml-2",
+      "documentId": "doc-ml-deeplearning-401",
+      "documentName": "CS401: Deep Learning Foundations & Backpropagation.pdf",
+      "pageNumber": 2,
+      "title": "Loss Functions & Gradient Descent Optimization",
+      "text": "The loss function L(y_hat, y) measures the discrepancy between predicted network outputs and ground truth targets. For regression, Mean Squared Error (MSE) is common. For binary classification, Binary Cross-Entropy Loss: L = -[y*log(y_hat) + (1-y)*log(1-y_hat)] is convex with sigmoid output units. Gradient Descent updates network parameters in the opposite direction of the gradient of the loss: theta = theta - eta * grad(L), where eta is the Learning Rate. If eta is too small, convergence is agonizingly slow; if eta is too large, the optimizer oscillates wildly or diverges. Modern optimizers like Adam (Adaptive Moment Estimation) maintain exponentially decaying averages of past gradients (momentum) and past squared gradients.",
+      "keywords": [
+        "loss function",
+        "binary cross-entropy",
+        "gradient descent",
+        "learning rate",
+        "optimization",
+        "adam",
+        "momentum",
+        "convergence"
+      ]
+    },
+    {
+      "id": "chunk-ml-3",
+      "documentId": "doc-ml-deeplearning-401",
+      "documentName": "CS401: Deep Learning Foundations & Backpropagation.pdf",
+      "pageNumber": 3,
+      "title": "Backpropagation & The Chain Rule of Calculus",
+      "text": "Backpropagation is the algorithmic implementation of the Chain Rule of calculus to compute the partial derivative of the loss function with respect to every weight in a multi-layered neural network. In the Forward Pass, input data flows from input layer to output layer, computing activations and the scalar loss L. In the Backward Pass, gradients flow from output layer back to input layer. For a weight w_ij connecting neuron i to j, by chain rule: dL/dw_ij = (dL/dz_j) * (dz_j/dw_ij) = delta_j * a_i, where delta_j is the error term dL/dz_j. Vanishing gradients occur in deep networks when repeated multiplication of small derivative terms (such as sigmoid derivatives <= 0.25) across layers causes gradients to approach zero exponentially as they propagate backwards.",
+      "keywords": [
+        "backpropagation",
+        "chain rule",
+        "computational graph",
+        "forward pass",
+        "backward pass",
+        "gradient flow",
+        "vanishing gradient",
+        "weight update"
+      ]
+    }
+  ],
+  "doubts": [
+    {
+      "id": "doubt-1",
+      "userId": "demo-user-1",
+      "conceptName": "Coffman Conditions for Deadlocks",
+      "documentId": "doc-os-concurrency-301",
+      "documentName": "CS301: Concurrency, Deadlocks & Virtual Memory.pdf",
+      "pageReference": 3,
+      "status": "Demonstrated",
+      "practiceAttempts": 3,
+      "lastScore": 100,
+      "createdAt": "2026-10-15T05:18:02.855Z",
+      "lastInteractionTime": "2026-10-17T06:12:52.343Z",
+      "studentFeedback": "Confused about the difference between Hold and Wait vs Circular Wait.",
+      "nextSuggestedActivity": "Concept Demonstrated! Retain mastery with a review in 7 days."
+    },
+    {
+      "id": "doubt-2",
+      "userId": "demo-user-1",
+      "conceptName": "Backpropagation Chain Rule",
+      "documentId": "doc-ml-deeplearning-401",
+      "documentName": "CS401: Deep Learning Foundations & Backpropagation.pdf",
+      "pageReference": 3,
+      "status": "Needs Review",
+      "practiceAttempts": 3,
+      "lastScore": 0,
+      "createdAt": "2026-10-13T05:18:02.855Z",
+      "lastInteractionTime": "2026-10-17T06:21:03.362Z",
+      "studentFeedback": "Struggling with tracking intermediate node derivatives in multi-layer chains.",
+      "nextSuggestedActivity": "Review the highlighted citation excerpt and re-test missing points."
+    },
+    {
+      "id": "doubt-3",
+      "userId": "demo-user-1",
+      "conceptName": "Memoization vs Tabulation",
+      "documentId": "doc-algo-recursion-201",
+      "documentName": "CS201: Recursion Dynamics & Dynamic Programming.pdf",
+      "pageReference": 2,
+      "status": "Learning",
+      "practiceAttempts": 3,
+      "lastScore": 70,
+      "createdAt": "2026-10-12T05:18:02.855Z",
+      "lastInteractionTime": "2026-10-16T17:18:02.855Z",
+      "studentFeedback": "Understands top-down cache, but converts slowly to bottom-up tables.",
+      "nextSuggestedActivity": "Solve 1 Fibonacci space-optimization challenge."
+    },
+    {
+      "id": "doubt-4",
+      "userId": "demo-user-1",
+      "conceptName": "Producer-Consumer Semaphores",
+      "documentId": "doc-os-concurrency-301",
+      "documentName": "CS301: Concurrency, Deadlocks & Virtual Memory.pdf",
+      "pageReference": 2,
+      "status": "Learning",
+      "practiceAttempts": 2,
+      "lastScore": 75,
+      "createdAt": "2026-10-14T05:18:02.855Z",
+      "lastInteractionTime": "2026-10-16T13:18:02.855Z",
+      "studentFeedback": "Initial confusion on empty vs full semaphore counters resolved.",
+      "nextSuggestedActivity": "Test your understanding on race condition prevention with bounded buffers."
+    },
+    {
+      "id": "doubt-5",
+      "userId": "demo-user-1",
+      "conceptName": "Critical Section Problem Criteria",
+      "documentId": "doc-os-concurrency-301",
+      "documentName": "CS301: Concurrency, Deadlocks & Virtual Memory.pdf",
+      "pageReference": 1,
+      "status": "Demonstrated",
+      "practiceAttempts": 4,
+      "lastScore": 95,
+      "createdAt": "2026-10-11T05:18:02.855Z",
+      "lastInteractionTime": "2026-10-16T05:18:02.855Z",
+      "studentFeedback": "Clear understanding of Mutual Exclusion, Progress, and Bounded Waiting.",
+      "nextSuggestedActivity": "Mastered. Maintain spaced retrieval in 7 days."
+    },
+    {
+      "id": "doubt-6",
+      "userId": "demo-user-1",
+      "conceptName": "Call Stack Activation Records",
+      "documentId": "doc-algo-recursion-201",
+      "documentName": "CS201: Recursion Dynamics & Dynamic Programming.pdf",
+      "pageReference": 1,
+      "status": "Demonstrated",
+      "practiceAttempts": 3,
+      "lastScore": 90,
+      "createdAt": "2026-10-10T05:18:02.855Z",
+      "lastInteractionTime": "2026-10-15T05:18:02.855Z",
+      "studentFeedback": "Can explain stack frames and return addresses accurately.",
+      "nextSuggestedActivity": "Mastered. Maintain spaced retrieval in 10 days."
+    }
+  ],
+  "sessions": [
+    {
+      "id": "session-1",
+      "userId": "demo-user-1",
+      "documentId": "doc-os-concurrency-301",
+      "title": "Operating Systems: Concurrency & Deadlocks Review",
+      "startedAt": "2026-10-17T01:18:02.855Z",
+      "messageCount": 8,
+      "topicsCovered": [
+        "Coffman Conditions",
+        "Critical Sections",
+        "Peterson Algorithm"
+      ]
+    },
+    {
+      "id": "session-2",
+      "userId": "demo-user-1",
+      "documentId": "doc-algo-recursion-201",
+      "title": "Algorithms: Dynamic Programming Transition",
+      "startedAt": "2026-10-16T17:18:02.855Z",
+      "messageCount": 6,
+      "topicsCovered": [
+        "Memoization vs Tabulation",
+        "Call Stack Frames"
+      ]
+    }
+  ],
+  "assessments": [
+    {
+      "id": "assess-1792218063362",
+      "userId": "demo-user-1",
+      "conceptName": "Backpropagation Chain Rule",
+      "documentId": "doc-ml-deeplearning-401",
+      "score": 0,
+      "passed": false,
+      "status": "Needs Review",
+      "completedAt": "2026-10-17T06:21:03.362Z",
+      "feedback": "Q1 (MCQ): Incorrect. Review the four Coffman conditions on page 3. Q2 (Short Answer): Needs more detail. Hardware speed cannot resolve a cyclical wait. Q3 (Feynman Explanation): Missing response.",
+      "missingConcepts": [
+        "Invalidating any one Coffman condition guarantees deadlock prevention.",
+        "Hardware capacity does not alter circular dependency order.",
+        "Active recall explanation in your own words."
+      ]
+    },
+    {
+      "id": "assess-1792217572343",
+      "userId": "demo-user-1",
+      "conceptName": "Coffman Conditions for Deadlocks",
+      "documentId": "doc-os-concurrency-301",
+      "score": 100,
+      "passed": true,
+      "status": "Demonstrated",
+      "completedAt": "2026-10-17T06:12:52.343Z",
+      "feedback": "Q1 (MCQ): Correct! You correctly identified that invalidating at least one condition prevents the deadlock. Q2 (Short Answer): Great insight. You articulated that circular dependency is a logical ordering issue rather than a hardware constraint. Q3 (Feynman Explanation): Well explained in accessible terms!",
+      "missingConcepts": []
+    },
+    {
+      "id": "assess-1792215273332",
+      "userId": "demo-user-1",
+      "conceptName": "Coffman Conditions for Deadlocks",
+      "documentId": "doc-os-concurrency-301",
+      "score": 100,
+      "passed": true,
+      "status": "Demonstrated",
+      "completedAt": "2026-10-17T05:34:33.332Z",
+      "feedback": "Q1 (MCQ): Correct! You correctly identified that invalidating at least one condition prevents the deadlock. Q2 (Short Answer): Great insight. You articulated that circular dependency is a logical ordering issue rather than a hardware constraint. Q3 (Feynman Explanation): Well explained in accessible terms!",
+      "missingConcepts": []
+    },
+    {
+      "id": "assess-1",
+      "userId": "demo-user-1",
+      "conceptName": "Coffman Conditions for Deadlocks",
+      "documentId": "doc-os-concurrency-301",
+      "score": 40,
+      "passed": false,
+      "status": "Needs Review",
+      "completedAt": "2026-10-17T01:18:02.855Z",
+      "feedback": "You accurately identified Mutual Exclusion and Hold and Wait, but omitted No Preemption and failed to detail Circular Wait dependencies.",
+      "missingConcepts": [
+        "No Preemption voluntary release rule",
+        "Circular closed dependency chain"
+      ]
+    },
+    {
+      "id": "assess-2",
+      "userId": "demo-user-1",
+      "conceptName": "Critical Section Problem Criteria",
+      "documentId": "doc-os-concurrency-301",
+      "score": 95,
+      "passed": true,
+      "status": "Demonstrated",
+      "completedAt": "2026-10-16T05:18:02.855Z",
+      "feedback": "Superb breakdown of all three criteria: Mutual Exclusion, Progress, and Bounded Waiting.",
+      "missingConcepts": []
+    }
+  ],
+  "interventions": [],
+  "settings": {
+    "interventionSensitivity": "balanced",
+    "voiceRate": 1,
+    "voicePitch": 1,
+    "autoReadResponses": true,
+    "preferredVoice": "default",
+    "reducedMotion": false,
+    "demoModeActive": true
+  }
+}

@@ -1,0 +1,3 @@
+const mongoose=require('mongoose');
+const s=new mongoose.Schema({userId:{type:mongoose.Schema.Types.ObjectId,ref:'User',required:true,index:true},stressLevel:{type:Number,min:1,max:5,default:3},workloadLevel:{type:Number,min:1,max:5,default:3},sleepQuality:{type:Number,min:1,max:5,default:3},energyLevel:{type:Number,min:1,max:5,default:3},motivationLevel:{type:Number,min:1,max:5,default:3},examPressure:{type:Number,min:1,max:5,default:3},notes:{type:String,default:''},createdAt:{type:Date,default:Date.now}});
+s.index({userId:1,createdAt:-1}); module.exports=mongoose.model('WellbeingCheckIn',s);

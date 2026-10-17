@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "concept_name": "Recursion",
+    "chunks": [
+      "Welcome to your lesson on recursion. Let us break it down clearly.",
+      "At its core, recursion means a function calls itself to solve a smaller version of the exact same problem.",
+      "Every recursive function must have two critical parts: a base case that stops the recursion, and a recursive step that moves closer to that base case.",
+      "Think of it like calculating factorial of 3: you calculate 3 times factorial of 2, which is 2 times factorial of 1.",
+      "Once factorial of 1 hits the base case, each waiting function gets its answer and completes, unwinding the call stack."
+    ],
+    "bookmark": 2
+  },
+  {
+    "id": 2,
+    "concept_name": "Call Stack",
+    "chunks": [
+      "Let us look at how your computer keeps track of function calls using the call stack.",
+      "The call stack operates on a Last-In, First-Out principle, exactly like a stack of plates in a dining hall.",
+      "Whenever you call a function, a new stack frame is pushed on top containing local variables and return address.",
+      "When a function returns its value, its frame is immediately popped off the top.",
+      "If recursive calls keep piling up without stopping, the stack runs out of allocated space, causing a stack overflow."
+    ],
+    "bookmark": 1
+  },
+  {
+    "id": 3,
+    "concept_name": "Base Case",
+    "chunks": [
+      "Today we focus on the most important line in any recursive algorithm: the base case.",
+      "The base case is your stopping condition. It answers the problem directly without making any further recursive calls.",
+      "Without an explicit base case, your function would invoke itself forever until the execution stack crashes.",
+      "Always check your base case condition first before executing the recursive call."
+    ],
+    "bookmark": 1
+  }
+]

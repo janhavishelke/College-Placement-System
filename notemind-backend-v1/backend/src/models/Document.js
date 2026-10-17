@@ -1,0 +1,3 @@
+const mongoose=require('mongoose');
+const s=new mongoose.Schema({userId:{type:mongoose.Schema.Types.ObjectId,ref:'User',required:true,index:true},originalFilename:{type:String,required:true},fileType:{type:String},storageLocation:{type:String},extractedTextReference:{type:String},processingStatus:{type:String,enum:['pending','processing','done','failed'],default:'pending'},pageOrSlideMetadata:{type:mongoose.Schema.Types.Mixed,default:{}},extractedText:{type:String,default:''},language:{type:String,default:'en'},createdAt:{type:Date,default:Date.now}});
+s.index({userId:1,createdAt:-1}); module.exports=mongoose.model('Document',s);

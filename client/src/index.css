@@ -1,0 +1,329 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-cream: #FAF7F2;
+    --text-main: #27211E;
+    --text-muted: #6B625E;
+    --coral: #FF5E4D;
+    --coral-hover: #E84D3C;
+    --pastel-blue: #EAF3FB;
+    --pastel-yellow: #FCF4E3;
+    --pastel-pink: #F8EDFB;
+    --pastel-mint: #E9F7F0;
+  }
+
+  body {
+    background-color: var(--bg-cream);
+    color: var(--text-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* Custom rounded scrollbars matching warm cream tone */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F2ECE4;
+}
+::-webkit-scrollbar-thumb {
+  background: #D8CEBE;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #BFB29F;
+}
+
+/* 1. Tutor speaking waveform bars animation */
+.waveform-container {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 32px;
+}
+
+.waveform-bar {
+  width: 3px;
+  border-radius: 9999px;
+  background-color: var(--coral);
+  transform-origin: center;
+  transition: height 0.15s ease-out;
+}
+
+.waveform-bar.active {
+  animation: wavePulse 1.2s ease-in-out infinite alternate;
+}
+
+.waveform-bar.paused {
+  animation: none !important;
+}
+
+@keyframes wavePulse {
+  0% {
+    height: 6px;
+    opacity: 0.5;
+  }
+  50% {
+    height: 28px;
+    opacity: 1;
+  }
+  100% {
+    height: 10px;
+    opacity: 0.7;
+  }
+}
+
+/* 2. Citation click: 1.2s highlight sweep left to right in coral, then thin underline stays */
+.citation-highlight-sweep {
+  background-size: 200% 100%;
+  background-image: linear-gradient(to right, rgba(255, 94, 77, 0.28) 50%, rgba(255, 94, 77, 0.08) 50%);
+  animation: sweepHighlight 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  border-bottom: 2px solid var(--coral);
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+@keyframes sweepHighlight {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+/* 3. Doubt card state morph transitions */
+.doubt-card-transition {
+  transition: all 0.25s ease-out;
+}
+
+/* 4. Verification ticks one by one */
+.tick-pop {
+  animation: tickFadeIn 0.3s ease-out forwards;
+}
+
+@keyframes tickFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 5. Interruption suggestion bar: slide in from left edge 200ms, no bounce */
+.slide-in-left {
+  animation: slideInLeft 200ms ease-out forwards;
+}
+
+.slide-out-left {
+  animation: slideOutLeft 200ms ease-in forwards;
+}
+
+@keyframes slideInLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutLeft {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-60px);
+  }
+}
+
+/* 6. Stack / recursion visual animations */
+.stack-frame-push {
+  animation: framePushDown 400ms ease-out forwards;
+}
+
+.stack-frame-pop {
+  animation: framePopUp 400ms ease-out forwards;
+}
+
+@keyframes framePushDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-24px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes framePopUp {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0.3;
+    transform: translateY(-16px) scale(0.96);
+  }
+}
+
+/* Doodle gentle floating motion */
+@keyframes doodleFloatSlow {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(3deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+.doodle-float {
+  animation: doodleFloatSlow 4s ease-in-out infinite;
+}
+
+.doodle-float-delay {
+  animation: doodleFloatSlow 4.5s ease-in-out infinite;
+  animation-delay: 1.5s;
+}
+
+/* Accessible reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Beautiful Vibrant Colorful Styling Utilities */
+.gradient-text-vibrant {
+  background: linear-gradient(135deg, #FF5E4D 0%, #8B5CF6 50%, #06B6D4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text-aurora {
+  background: linear-gradient(135deg, #06B6D4 0%, #10B981 50%, #F59E0B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.glass-card-dark {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-card-light {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.06);
+}
+
+.neon-glow-cyan {
+  box-shadow: 0 0 20px -3px rgba(6, 182, 212, 0.45);
+}
+
+.neon-glow-violet {
+  box-shadow: 0 0 20px -3px rgba(139, 92, 246, 0.45);
+}
+
+.neon-glow-coral {
+  box-shadow: 0 0 20px -3px rgba(255, 94, 77, 0.45);
+}
+
+.neon-glow-emerald {
+  box-shadow: 0 0 20px -3px rgba(16, 185, 129, 0.45);
+}
+
+/* ==================================================== */
+/* 3D BOOK LOADING ANIMATION STYLES                     */
+/* ==================================================== */
+.perspective-scene {
+  perspective: 1400px;
+  perspective-origin: 50% 50%;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.book-shadow {
+  box-shadow: 
+    0 30px 60px -12px rgba(0, 0, 0, 0.75),
+    0 0 50px rgba(245, 158, 11, 0.25);
+}
+
+.page-turn-origin {
+  transform-origin: left center;
+}
+
+@keyframes bookHoverFloat {
+  0%, 100% {
+    transform: translateY(0px) rotateX(18deg) rotateY(-12deg);
+  }
+  50% {
+    transform: translateY(-8px) rotateX(15deg) rotateY(-15deg);
+  }
+}
+
+.animate-book-hover {
+  animation: bookHoverFloat 4s ease-in-out infinite;
+}
+
+@keyframes fastPageFlip {
+  0% {
+    transform: rotateY(0deg);
+    box-shadow: inset 10px 0 20px rgba(0,0,0,0.2);
+  }
+  50% {
+    box-shadow: inset 20px 0 30px rgba(245, 158, 11, 0.3);
+  }
+  100% {
+    transform: rotateY(-178deg);
+    box-shadow: inset -10px 0 20px rgba(0,0,0,0.3);
+  }
+}
+
+.animate-fast-flip {
+  animation: fastPageFlip 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* Golden Book Spine Glow */
+.spine-glow {
+  background: linear-gradient(90deg, #b45309, #f59e0b 50%, #78350f);
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.6);
+}
+

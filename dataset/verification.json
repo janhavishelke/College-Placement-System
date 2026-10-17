@@ -1,0 +1,127 @@
+[
+  {
+    "id": 1,
+    "concept_name": "Recursion",
+    "prompt": "Explain how recursion works in your own words.",
+    "key_ideas": [
+      {
+        "id": 1,
+        "text": "Function calls itself to solve smaller subproblems",
+        "keywords": ["calls itself", "calling itself", "invokes itself", "self-calling", "subproblem", "smaller"],
+        "gap": "Missing: a recursive function calls itself to solve smaller subproblems."
+      },
+      {
+        "id": 2,
+        "text": "Base case stops the calls",
+        "keywords": ["base case", "stopping condition", "stop", "terminat", "halt", "emergency brake"],
+        "gap": "Missing: base case stops the calls."
+      },
+      {
+        "id": 3,
+        "text": "Parameters progress toward the base condition",
+        "keywords": ["progress", "smaller", "decrement", "n - 1", "n-1", "reduc", "advance"],
+        "gap": "Missing: parameters must progress toward the base condition with each call."
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "concept_name": "Base Case",
+    "prompt": "What is a base case and why is it necessary in recursive functions?",
+    "key_ideas": [
+      {
+        "id": 1,
+        "text": "Condition where recursion terminates",
+        "keywords": ["terminat", "stops", "condition", "halt", "end"],
+        "gap": "Missing: base case terminates the chain of recursive calls."
+      },
+      {
+        "id": 2,
+        "text": "Returns a concrete value directly",
+        "keywords": ["return", "concrete", "direct", "value", "result"],
+        "gap": "Missing: provides a direct concrete return value without further calls."
+      },
+      {
+        "id": 3,
+        "text": "Prevents infinite calls and stack overflow",
+        "keywords": ["overflow", "infinite", "prevent", "crash", "memory limit"],
+        "gap": "Missing: prevents infinite execution and stack overflow crashes."
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "concept_name": "Call Stack",
+    "prompt": "How does the call stack manage recursive invocations?",
+    "key_ideas": [
+      {
+        "id": 1,
+        "text": "Operates as Last-In First-Out (LIFO)",
+        "keywords": ["lifo", "last-in", "last in", "order"],
+        "gap": "Missing: operates on a Last-In, First-Out (LIFO) basis."
+      },
+      {
+        "id": 2,
+        "text": "Pushes a new stack frame per function call",
+        "keywords": ["frame", "push", "activation", "allocat", "variables"],
+        "gap": "Missing: pushes a separate stack frame for every active call."
+      },
+      {
+        "id": 3,
+        "text": "Pops frames when functions return and unwinds",
+        "keywords": ["pop", "return", "unwind", "complet"],
+        "gap": "Missing: pops frames off the stack during the unwinding phase."
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "concept_name": "Stack Overflow",
+    "prompt": "Why does missing a base case lead to a stack overflow error?",
+    "key_ideas": [
+      {
+        "id": 1,
+        "text": "Recursive calls keep pushing stack frames indefinitely",
+        "keywords": ["push", "indefinitely", "accumulat", "piling", "continuous"],
+        "gap": "Missing: stack frames keep accumulating without returning."
+      },
+      {
+        "id": 2,
+        "text": "Call stack has a fixed memory ceiling",
+        "keywords": ["limit", "ceiling", "bounded", "maximum", "allocated", "size"],
+        "gap": "Missing: the runtime call stack has a bounded memory limit."
+      },
+      {
+        "id": 3,
+        "text": "Memory exceeds threshold causing runtime crash",
+        "keywords": ["exceed", "crash", "error", "overflow", "threshold"],
+        "gap": "Missing: exceeding memory limit triggers a fatal runtime stack overflow."
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "concept_name": "Stack Frame",
+    "prompt": "What information does an activation record or stack frame store?",
+    "key_ideas": [
+      {
+        "id": 1,
+        "text": "Incoming function arguments and parameters",
+        "keywords": ["argument", "parameter", "input", "passed"],
+        "gap": "Missing: holds arguments and parameters for that specific invocation."
+      },
+      {
+        "id": 2,
+        "text": "Private local variables allocated within function",
+        "keywords": ["local", "variable", "scope", "isolated", "private"],
+        "gap": "Missing: keeps local variables isolated from other frames."
+      },
+      {
+        "id": 3,
+        "text": "Return address back to the calling instruction",
+        "keywords": ["return address", "caller", "location", "address", "resume"],
+        "gap": "Missing: saves the return address to resume the caller."
+      }
+    ]
+  }
+]

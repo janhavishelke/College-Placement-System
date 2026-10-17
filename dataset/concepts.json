@@ -1,0 +1,90 @@
+[
+  {
+    "id": 1,
+    "name": "Recursion",
+    "definition": "A programming technique where a function calls itself to solve smaller instances of the same problem until reaching a terminating base condition.",
+    "doc_id": 1,
+    "page_no": 2,
+    "prerequisites": ["Functions", "Call Stack"],
+    "common_confusion": "Confusing the base case with loop termination or forgetting that each call maintains its own distinct execution stack frame.",
+    "simpler_explanation": "Think of recursion like Russian nesting dolls (Matryoshka). You open each doll to find a smaller one until you reach the solid tiny doll inside (the base case). Then you close them back up.",
+    "visual_example": "factorial(3) pushes factorial(2), which pushes factorial(1)=1, then returns unwind back up: 1 -> 2 -> 6."
+  },
+  {
+    "id": 2,
+    "name": "Base Case",
+    "definition": "The guard clause or stopping condition in a recursive function that directly returns a value without making any further recursive calls.",
+    "doc_id": 1,
+    "page_no": 3,
+    "prerequisites": ["Recursion"],
+    "common_confusion": "Placing the base case after the recursive invocation or using a condition that incoming arguments can never satisfy.",
+    "simpler_explanation": "The base case is the emergency brake of your recursive function. It stops the chain reaction and hands back a real answer.",
+    "visual_example": "if (n <= 1) return 1;"
+  },
+  {
+    "id": 3,
+    "name": "Call Stack",
+    "definition": "A Last-In, First-Out (LIFO) runtime data structure that tracks active function calls, executing the topmost frame before returning to the caller.",
+    "doc_id": 1,
+    "page_no": 4,
+    "prerequisites": ["Functions"],
+    "common_confusion": "Assuming functions execute in parallel rather than synchronously pausing until deeper frames return.",
+    "simpler_explanation": "A stack of cafeteria trays. You put a new tray on top when a function is called, and you can only remove the top tray when that function finishes.",
+    "visual_example": "[Top: factorial(1)] -> [Middle: factorial(2)] -> [Bottom: factorial(3)]"
+  },
+  {
+    "id": 4,
+    "name": "Stack Frame",
+    "definition": "A dedicated memory block allocated on the call stack for an active function call, storing arguments, local variables, and the caller return address.",
+    "doc_id": 1,
+    "page_no": 5,
+    "prerequisites": ["Call Stack"],
+    "common_confusion": "Believing variables with identical names across recursive invocations overwrite each other.",
+    "simpler_explanation": "A personal notebook page created fresh for each function invocation holding its own private notes and variables.",
+    "visual_example": "Frame 3: n=3, waiting on fact(2) | Frame 2: n=2, waiting on fact(1) | Frame 1: n=1, returns 1"
+  },
+  {
+    "id": 5,
+    "name": "Stack Overflow",
+    "definition": "A runtime error that occurs when recursive calls exceed the maximum call stack memory boundary, usually caused by a missing base case.",
+    "doc_id": 1,
+    "page_no": 6,
+    "prerequisites": ["Call Stack", "Base Case"],
+    "common_confusion": "Thinking the computer has exhausted total system RAM rather than exceeding the designated call stack depth.",
+    "simpler_explanation": "Your tray stack grows so tall it hits the ceiling and crashes because the emergency brake never fired.",
+    "visual_example": "10,000 recursive frames stacked -> RangeError: Maximum call stack size exceeded."
+  },
+  {
+    "id": 6,
+    "name": "Functions",
+    "definition": "A self-contained block of reusable code that accepts parameter inputs, performs defined logic, and returns an output value.",
+    "doc_id": 1,
+    "page_no": 1,
+    "prerequisites": [],
+    "common_confusion": "Confusing parameters (the declared variables in function definition) with arguments (actual values passed at runtime).",
+    "simpler_explanation": "A kitchen blender recipe: you drop ingredients into the top, press run, and get a smoothie out of the spout.",
+    "visual_example": "function multiply(a, b) { return a * b; }"
+  },
+  {
+    "id": 7,
+    "name": "Photosynthesis",
+    "definition": "The biological process by which green plants and autotrophs convert sunlight, water, and carbon dioxide into oxygen and glucose.",
+    "doc_id": 2,
+    "page_no": 1,
+    "prerequisites": [],
+    "common_confusion": "Assuming plants only release oxygen and do not perform cellular respiration with oxygen themselves.",
+    "simpler_explanation": "Solar-powered cooking: sunlight + water + carbon dioxide = sugar + oxygen.",
+    "visual_example": "6CO2 + 6H2O + Sunlight -> C6H12O6 + 6O2"
+  },
+  {
+    "id": 8,
+    "name": "Calvin Cycle",
+    "definition": "The light-independent set of chemical reactions occurring in the chloroplast stroma that fixes carbon dioxide into glucose using ATP and NADPH.",
+    "doc_id": 2,
+    "page_no": 3,
+    "prerequisites": ["Photosynthesis"],
+    "common_confusion": "Assuming the cycle only occurs at night because it is named 'light-independent'.",
+    "simpler_explanation": "The sugar assembly line in the chloroplast stroma running on batteries charged by sunlight.",
+    "visual_example": "CO2 + RuBP --(RuBisCO)--> 3-PGA --(ATP + NADPH)--> G3P Sugar"
+  }
+]

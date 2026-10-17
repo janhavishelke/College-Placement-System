@@ -14,14 +14,13 @@ exports.register = async (req, res) => {
             });
         }
 
-        // Public registration is restricted to STUDENT and COMPANY only.
-        // Administrative roles (ADMIN, PLACEMENT_HEAD, COORDINATOR) must be created by administrators.
-        const allowedPublicRoles = ['STUDENT', 'COMPANY'];
+        // Registration permits STUDENT and ADMIN roles
+        const allowedPublicRoles = ['STUDENT', 'ADMIN', 'COMPANY'];
         const normalizedRole = role.toUpperCase();
         if (!allowedPublicRoles.includes(normalizedRole)) {
             return res.status(403).json({
                 success: false,
-                message: 'Public self-registration is only permitted for STUDENT and COMPANY roles. Institutional roles must be provisioned by the Placement Office.'
+                message: 'Registration is permitted for STUDENT and ADMIN roles.'
             });
         }
 
@@ -149,3 +148,26 @@ exports.me = async (req, res) => {
         return res.status(500).json({ success: false, message: 'Server error fetching user.' });
     }
 };
+
+exports.getStudents = async (req, res) => {
+    try {
+        const { all } = require('../config/db');
+        const students = await all(
+            `SELECT id, name, email, role, department, branch, cgpa, skills, status, created_at 
+             FROM users 
+             WHERE role = 'STUDENT' 
+             ORDER BY id DESC`
+        );
+        const adminCount = await get(`SELECT COUNT(*) as count FROM users WHERE role IN ('ADMIN', 'PLACEMENT_HEAD')`);
+        return res.status(200).json({
+            success: true,
+            totalStudents: (students || []).length,
+            totalAdmins: adminCount ? adminCount.count : 1,
+            students: students || []
+        });
+    } catch (err) {
+        console.error('getStudents error:', err);
+        return res.status(500).json({ success: false, message: 'Server error fetching students.' });
+    }
+};
+

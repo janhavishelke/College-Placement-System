@@ -1,0 +1,2 @@
+const r=require('express').Router(); const {auth}=require('../middleware/auth.middleware'); const {chatLimiter}=require('../middleware/rate-limit.middleware'); const c=require('../controllers/tutor.controller');
+r.post('/conversations',auth,c.createConv); r.get('/conversations',auth,c.listConv); r.get('/conversations/:id',auth,c.getConv); r.post('/conversations/:id/messages',auth,chatLimiter,c.sendMessage); module.exports=r;

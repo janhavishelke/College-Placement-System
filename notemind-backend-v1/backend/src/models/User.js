@@ -1,0 +1,3 @@
+const mongoose=require('mongoose');
+const s=new mongoose.Schema({name:{type:String,required:true},email:{type:String,required:true,unique:true,lowercase:true},passwordHash:{type:String,required:true},preferredLanguage:{type:String,default:'en'},subjects:{type:[String],default:[]},studyGoals:{type:[String],default:[]},languages:{type:[String],default:[]},availableTimes:{type:[String],default:[]},studyFormat:{type:String,default:'online'},profileVisible:{type:Boolean,default:true},role:{type:String,default:'student'},createdAt:{type:Date,default:Date.now}});
+s.index({email:1}); module.exports=mongoose.model('User',s);

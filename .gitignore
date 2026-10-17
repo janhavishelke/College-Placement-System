@@ -14,6 +14,10 @@ cloudflared.exe
 # Operating System & Editor Files
 .DS_Store
 Thumbs.db
-desktop.ini
 .vscode/
 .idea/
+
+# SQLite Database
+unera.db
+unera.db-shm
+unera.db-wal

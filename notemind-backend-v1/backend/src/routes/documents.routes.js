@@ -1,0 +1,2 @@
+const r=require('express').Router(); const {auth}=require('../middleware/auth.middleware'); const {upload}=require('../middleware/upload.middleware'); const c=require('../controllers/documents.controller');
+r.post('/upload',auth,upload.array('files',5),c.upload); r.get('/',auth,c.list); r.get('/:id',auth,c.getOne); r.get('/:id/status',auth,c.status); r.patch('/:id',auth,c.rename); r.delete('/:id',auth,c.remove); module.exports=r;

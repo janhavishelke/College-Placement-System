@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "user_id": 1,
+    "concept_name": "Recursion",
+    "concept_id": 1,
+    "status": "unresolved",
+    "steps_done": [],
+    "created_at": "2026-10-17T08:30:00.000Z",
+    "resolved_at": null
+  },
+  {
+    "id": 2,
+    "user_id": 1,
+    "concept_name": "Call Stack",
+    "concept_id": 3,
+    "status": "resolving",
+    "steps_done": ["simpler"],
+    "created_at": "2026-10-17T09:10:00.000Z",
+    "resolved_at": null
+  },
+  {
+    "id": 3,
+    "user_id": 1,
+    "concept_name": "Stack Overflow",
+    "concept_id": 5,
+    "status": "resolved",
+    "steps_done": ["simpler", "visual", "practice"],
+    "created_at": "2026-10-16T14:00:00.000Z",
+    "resolved_at": "2026-10-16T14:45:00.000Z"
+  },
+  {
+    "id": 4,
+    "user_id": 1,
+    "concept_name": "Base Case",
+    "concept_id": 2,
+    "status": "unresolved",
+    "steps_done": [],
+    "created_at": "2026-10-17T10:15:00.000Z",
+    "resolved_at": null
+  }
+]

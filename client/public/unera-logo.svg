@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <rect width="100" height="100" rx="22" fill="#2563EB"/>
+  <!-- Educational Neural Emblem -->
+  <path d="M50 20L78 34V66L50 80L22 66V34L50 20Z" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round"/>
+  <circle cx="50" cy="50" r="12" fill="#FFFFFF"/>
+  <circle cx="50" cy="50" r="6" fill="#2563EB"/>
+  <!-- Connecting Nodes -->
+  <line x1="50" y1="20" x2="50" y2="38" stroke="#93C5FD" stroke-width="3"/>
+  <line x1="78" y1="34" x2="60" y2="44" stroke="#93C5FD" stroke-width="3"/>
+  <line x1="78" y1="66" x2="60" y2="56" stroke="#93C5FD" stroke-width="3"/>
+  <line x1="50" y1="80" x2="50" y2="62" stroke="#93C5FD" stroke-width="3"/>
+  <line x1="22" y1="66" x2="40" y2="56" stroke="#93C5FD" stroke-width="3"/>
+  <line x1="22" y1="34" x2="40" y2="44" stroke="#93C5FD" stroke-width="3"/>
+</svg>

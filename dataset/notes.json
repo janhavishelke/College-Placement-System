@@ -1,0 +1,72 @@
+[
+  {
+    "id": 1,
+    "title": "Functions, Call Stack + Recursion",
+    "filename": "recursion_call_stack.txt",
+    "page_count": 10,
+    "uploaded_at": "2026-10-17T08:00:00.000Z",
+    "pages": [
+      {
+        "page_no": 1,
+        "text": "1. Functions and Program Execution\n\nA function is a self-contained block of code designed to perform a specific task. When a program calls a function, execution control transfers to that function's code block. Parameters act as input variables passed into the function, while the return statement sends output data back to the caller.\n\nKey components of functions:\n- Signature: Function name, parameter types, and return type.\n- Scope: Variables declared inside a function have local scope and cannot be directly accessed outside.\n- Execution Flow: When a function call occurs, the caller pauses until the called function produces a return value or terminates."
+      },
+      {
+        "page_no": 2,
+        "text": "2. What is Recursion?\n\nRecursion is a programming technique where a function calls itself directly or indirectly in order to solve a problem. Recursion works by breaking a complex problem down into smaller instances of the same problem until a trivial, easily solved instance is reached.\n\nDefinition:\nRecursion is a method where the solution to a problem depends on solutions to smaller instances of the same problem. A recursive function solves a problem by calling a copy of itself.\n\nEvery valid recursive algorithm must satisfy two conditions:\n1. It must have at least one base case that produces a result without calling itself.\n2. Each recursive call must move the argument closer to the base case condition."
+      },
+      {
+        "page_no": 3,
+        "text": "3. The Base Case and Recursive Step\n\nThe base case is the condition under which the function stops making recursive calls. Without a base case, the function will call itself indefinitely.\n\nAnatomy of a recursive function:\n- Base Case: A conditional check (usually an if statement) that handles the smallest subproblem directly and returns a concrete value without further recursion.\n- Recursive Step: The code path where the function invokes itself with modified parameters (e.g., n - 1), reducing the original problem towards the base case.\n\nIf the base case is placed after the recursive call, or if the argument never reaches the base condition, the program will never terminate cleanly."
+      },
+      {
+        "page_no": 4,
+        "text": "4. The Call Stack Architecture\n\nThe call stack is a LIFO (Last-In, First-Out) data structure that tracks active function calls in a program. When a function is invoked, a new stack frame is pushed onto the top of the stack.\n\nCall stack principles:\n- Push: When any function is called, the runtime pushes an activation record onto the top of the call stack.\n- Execution: Only the function currently at the top of the call stack is actively executing.\n- Pop: When the active function reaches a return statement, its stack frame is popped off, and control resumes in the caller frame immediately below it."
+      },
+      {
+        "page_no": 5,
+        "text": "5. Stack Frames and Activation Records\n\nA stack frame (or activation record) is allocated on the call stack whenever a function is called. It stores parameters, local variables, and the return address.\n\nContents of a stack frame:\n1. Incoming arguments and parameter bindings.\n2. Local variables allocated within the function body.\n3. Return address: the exact memory location in the caller function to return to after execution completes.\n4. Saved register states and frame pointer references.\n\nEach recursive invocation creates a completely distinct stack frame. Even though the function code is identical, variable states remain completely isolated across invocations."
+      },
+      {
+        "page_no": 6,
+        "text": "6. Stack Overflow Mechanics\n\nA stack overflow occurs when the call stack exceeds its allocated memory limit. In recursive algorithms, this is almost always caused by a missing or unreachable base case.\n\nWhy stack overflows happen:\n- When a function calls itself without hitting a base case, frames keep getting pushed continuously.\n- The call stack has a bounded size determined by the operating system or language runtime (e.g., typically 1MB to 8MB in native languages, or roughly 10,000 recursive frames in V8/Node.js).\n- Once this memory threshold is breached, the runtime throws a stack overflow error (e.g., RangeError: Maximum call stack size exceeded) and crashes."
+      },
+      {
+        "page_no": 7,
+        "text": "7. Trace Execution: Factorial of 3\n\nTo compute factorial(3), the function calls factorial(2), which in turn calls factorial(1). Once factorial(1) hits the base case and returns 1, the stack frames unwind.\n\nStep-by-step trace:\n- Step 1: factorial(3) is called. Checks if (3 <= 1) -> false. Evaluates return 3 * factorial(2). Stack pushes factorial(2).\n- Step 2: factorial(2) is called. Checks if (2 <= 1) -> false. Evaluates return 2 * factorial(1). Stack pushes factorial(1).\n- Step 3: factorial(1) is called. Checks if (1 <= 1) -> true! Hits base case, returning 1 without pushing any further frames."
+      },
+      {
+        "page_no": 8,
+        "text": "8. Stack Unwinding Phase\n\nStack unwinding occurs when the base case returns. Each waiting stack frame completes its remaining computation with the returned value and pops off the stack.\n\nContinuing factorial(3) unwinding:\n- Frame 1 pops: factorial(1) returns 1 back to Frame 2.\n- Frame 2 resumes: completes calculation (2 * 1 = 2) and returns 2 to Frame 3. Frame 2 pops.\n- Frame 3 resumes: completes calculation (3 * 2 = 6) and returns 6 to the main caller. Frame 3 pops.\n\nThe final result 6 is delivered only after all recursive frames have completed unwinding."
+      },
+      {
+        "page_no": 9,
+        "text": "9. Iteration vs Recursion Comparison\n\nIteration uses loop constructs and modifies state variables in place. Recursion repeatedly invokes the function, relying on the call stack to maintain individual execution states.\n\nComparison dimensions:\n- Space Complexity: Iterative loops maintain O(1) auxiliary stack space. Recursive approaches typically consume O(n) call stack memory due to frame allocations.\n- Readability: Recursive solutions are often cleaner and mathematically closer to inductive definitions (such as tree traversals, divide-and-conquer, graph depth-first searches).\n- Performance: Loop iteration avoids the overhead of repeated stack frame creation and function call indirection."
+      },
+      {
+        "page_no": 10,
+        "text": "10. Common Pitfalls and Best Practices\n\nCommon recursive pitfalls include omitting the base case, forgetting to return the recursive call result, and not modifying arguments towards the base condition.\n\nEssential checklist for recursive functions:\n1. Base case placed first: Ensure guard clauses precede any recursive invocation.\n2. Progress guarantee: Verify that parameters strictly decrease or increase towards the terminal condition.\n3. Return propagation: Always return the result of recursive calls; forgetting the return keyword yields undefined results.\n4. Call stack awareness: Consider maximum recursion limits when processing deep or unbounded inputs."
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "title": "Photosynthesis",
+    "filename": "photosynthesis_biology.txt",
+    "page_count": 3,
+    "uploaded_at": "2026-10-17T08:05:00.000Z",
+    "pages": [
+      {
+        "page_no": 1,
+        "text": "1. Introduction to Photosynthesis\n\nPhotosynthesis is the chemical process through which plants and other organisms transform light energy into chemical energy stored in glucose molecules. It represents the foundational biological energy conversion sustaining aerobic life on Earth.\n\nOverall chemical equation:\n6CO2 (Carbon Dioxide) + 6H2O (Water) + Light Energy -> C6H12O6 (Glucose) + 6O2 (Oxygen)\n\nPhotosynthesis occurs inside specialized plant cell organelles called chloroplasts, which contain chlorophyll pigments that absorb blue and red light while reflecting green wavelengths."
+      },
+      {
+        "page_no": 2,
+        "text": "2. Light-Dependent Reactions\n\nLight-dependent reactions occur within the thylakoid membranes of chloroplasts, capturing photon energy to synthesize ATP and NADPH while splitting water to release oxygen.\n\nKey stages:\n- Photolysis: Water molecules (H2O) are split by light energy, releasing electrons, protons (H+), and oxygen gas (O2).\n- Electron Transport Chain: High-energy electrons flow through photosystems II and I, pumping protons into the thylakoid lumen.\n- Chemiosmosis: The proton gradient drives ATP synthase to generate ATP and produces NADPH for subsequent chemical synthesis."
+      },
+      {
+        "page_no": 3,
+        "text": "3. The Calvin Cycle (Light-Independent Reactions)\n\nThe Calvin cycle takes place in the stroma of chloroplasts. It uses the chemical energy of ATP and NADPH produced during light reactions to fix carbon dioxide into sugars.\n\nPhases of the Calvin Cycle:\n1. Carbon Fixation: The enzyme RuBisCO attaches carbon dioxide (CO2) to ribulose bisphosphate (RuBP).\n2. Reduction: ATP and NADPH convert fixed carbon into glyceraldehyde-3-phosphate (G3P) molecules, which combine to form glucose.\n3. Regeneration: Remaining G3P molecules use additional ATP to regenerate RuBP, allowing the cycle to repeat continuously."
+      }
+    ]
+  }
+]

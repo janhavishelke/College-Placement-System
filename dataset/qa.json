@@ -1,0 +1,128 @@
+[
+  {
+    "id": 1,
+    "question": "What is recursion?",
+    "answer": "Recursion is a programming technique where a function calls itself directly or indirectly in order to solve a problem. It solves complex tasks by breaking them down into smaller instances of the same problem until a trivial base case is reached.",
+    "grounded": 1,
+    "doc_id": 1,
+    "page_no": 2,
+    "excerpt": "Recursion is a method where the solution to a problem depends on solutions to smaller instances of the same problem. A recursive function solves a problem by calling a copy of itself."
+  },
+  {
+    "id": 2,
+    "question": "What is a base case?",
+    "answer": "A base case is the stopping condition in a recursive function. It returns a concrete value directly without making any further recursive calls, preventing the function from executing indefinitely.",
+    "grounded": 1,
+    "doc_id": 1,
+    "page_no": 3,
+    "excerpt": "The base case is the condition under which the function stops making recursive calls. Without a base case, the function will call itself indefinitely."
+  },
+  {
+    "id": 3,
+    "question": "What is the call stack?",
+    "answer": "The call stack is a Last-In, First-Out (LIFO) data structure that tracks active function calls in a program. Whenever a function is invoked, a new stack frame is pushed onto the top of the stack.",
+    "grounded": 1,
+    "doc_id": 1,
+    "page_no": 4,
+    "excerpt": "The call stack is a LIFO (Last-In, First-Out) data structure that tracks active function calls in a program. When a function is invoked, a new stack frame is pushed onto the top of the stack."
+  },
+  {
+    "id": 4,
+    "question": "What is a stack frame?",
+    "answer": "A stack frame (or activation record) is allocated on the call stack whenever a function is called. It stores parameters, local variables, and the return address back to the caller.",
+    "grounded": 1,
+    "doc_id": 1,
+    "page_no": 5,
+    "excerpt": "A stack frame (or activation record) is allocated on the call stack whenever a function is called. It stores parameters, local variables, and the return address."
+  },
+  {
+    "id": 5,
+    "question": "What causes a stack overflow?",
+    "answer": "A stack overflow occurs when the call stack exceeds its allocated memory limit. In recursive algorithms, this is almost always caused by a missing or unreachable base case.",
+    "grounded": 1,
+    "doc_id": 1,
+    "page_no": 6,
+    "excerpt": "A stack overflow occurs when the call stack exceeds its allocated memory limit. In recursive algorithms, this is almost always caused by a missing or unreachable base case."
+  },
+  {
+    "id": 6,
+    "question": "How does recursive factorial work?",
+    "answer": "To compute factorial(3), the function calls factorial(2), which in turn calls factorial(1). Once factorial(1) hits the base case and returns 1, the stack frames unwind.",
+    "grounded": 1,
+    "doc_id": 1,
+    "page_no": 7,
+    "excerpt": "To compute factorial(3), the function calls factorial(2), which in turn calls factorial(1). Once factorial(1) hits the base case and returns 1, the stack frames unwind."
+  },
+  {
+    "id": 7,
+    "question": "How does stack unwinding work?",
+    "answer": "Stack unwinding occurs when the base case returns. Each waiting stack frame completes its remaining computation with the returned value and pops off the stack.",
+    "grounded": 1,
+    "doc_id": 1,
+    "page_no": 8,
+    "excerpt": "Stack unwinding occurs when the base case returns. Each waiting stack frame completes its remaining computation with the returned value and pops off the stack."
+  },
+  {
+    "id": 8,
+    "question": "What is the difference between iteration and recursion?",
+    "answer": "Iteration uses loop constructs and modifies state variables in place. Recursion repeatedly invokes the function, relying on the call stack to maintain individual execution states.",
+    "grounded": 1,
+    "doc_id": 1,
+    "page_no": 9,
+    "excerpt": "Iteration uses loop constructs and modifies state variables in place. Recursion repeatedly invokes the function, relying on the call stack to maintain individual execution states."
+  },
+  {
+    "id": 9,
+    "question": "What are common recursion pitfalls?",
+    "answer": "Common recursive pitfalls include omitting the base case, forgetting to return the recursive call result, and not modifying arguments towards the base condition.",
+    "grounded": 1,
+    "doc_id": 1,
+    "page_no": 10,
+    "excerpt": "Common recursive pitfalls include omitting the base case, forgetting to return the recursive call result, and not modifying arguments towards the base condition."
+  },
+  {
+    "id": 10,
+    "question": "What is a function?",
+    "answer": "A function is a self-contained block of code designed to perform a specific task. Parameters act as input variables passed into the function, while the return statement sends output data back to the caller.",
+    "grounded": 1,
+    "doc_id": 1,
+    "page_no": 1,
+    "excerpt": "A function is a self-contained block of code designed to perform a specific task. Parameters act as input variables passed into the function, while the return statement sends output data back to the caller."
+  },
+  {
+    "id": 11,
+    "question": "What is photosynthesis?",
+    "answer": "Photosynthesis is the chemical process through which plants and other organisms transform light energy into chemical energy stored in glucose molecules, releasing oxygen as a byproduct.",
+    "grounded": 1,
+    "doc_id": 2,
+    "page_no": 1,
+    "excerpt": "Photosynthesis is the chemical process through which plants and other organisms transform light energy into chemical energy stored in glucose molecules."
+  },
+  {
+    "id": 12,
+    "question": "What are light-dependent reactions?",
+    "answer": "Light-dependent reactions occur within the thylakoid membranes of chloroplasts, capturing photon energy to synthesize ATP and NADPH while splitting water to release oxygen.",
+    "grounded": 1,
+    "doc_id": 2,
+    "page_no": 2,
+    "excerpt": "Light-dependent reactions occur within the thylakoid membranes of chloroplasts, capturing photon energy to synthesize ATP and NADPH while splitting water to release oxygen."
+  },
+  {
+    "id": 13,
+    "question": "What is tail recursion?",
+    "answer": "Not in your notes. The closest related concept in your notes is Recursion.",
+    "grounded": 0,
+    "doc_id": null,
+    "page_no": null,
+    "excerpt": null
+  },
+  {
+    "id": 14,
+    "question": "What is memoization?",
+    "answer": "Not in your notes. The closest related concept in your notes is Recursion.",
+    "grounded": 0,
+    "doc_id": null,
+    "page_no": null,
+    "excerpt": null
+  }
+]

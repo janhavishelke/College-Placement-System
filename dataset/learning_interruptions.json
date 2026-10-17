@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "rule": "verification_gap_twice",
+    "concept_name": "Recursion",
+    "trigger_evidence": "Failed verification on the same concept twice with a missing base case.",
+    "suggestion_text": "You missed the base case twice. Want a 1-minute review of call stack first?"
+  },
+  {
+    "id": 2,
+    "rule": "same_doubt_asked_twice",
+    "concept_name": "Recursion",
+    "trigger_evidence": "Student logged multiple unresolved doubts on recursion mechanics.",
+    "suggestion_text": "You asked about recursion again. Would an interactive visual stack diagram help?"
+  },
+  {
+    "id": 3,
+    "rule": "missing_prerequisite",
+    "concept_name": "Recursion",
+    "trigger_evidence": "Student struggled with recursion but has no passing verification for call stack.",
+    "suggestion_text": "Recursion relies directly on the Call Stack. Review Call Stack before continuing?"
+  },
+  {
+    "id": 4,
+    "rule": "missing_prerequisite_base_case",
+    "concept_name": "Stack Overflow",
+    "trigger_evidence": "Struggling with stack overflow without mastering base case stopping conditions.",
+    "suggestion_text": "Stack overflow is caused by unbounded recursion. Want to review Base Case conditions first?"
+  }
+]
